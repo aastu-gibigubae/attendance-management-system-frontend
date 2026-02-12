@@ -44,9 +44,13 @@ export const useCreateAttendance = () => {
   return useMutation({
     mutationFn: attendanceService.createAttendance,
     onSuccess: (_, variables) => {
-      // Invalidate attendance for the course
+      // Invalidate admin's attendance view for the course
       queryClient.invalidateQueries({ 
         queryKey: attendanceKeys.byCourse(variables.courseId) 
+      });
+      // Invalidate student's attendance view for the course
+      queryClient.invalidateQueries({ 
+        queryKey: attendanceKeys.studentByCourse(variables.courseId) 
       });
     },
   });
