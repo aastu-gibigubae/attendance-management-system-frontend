@@ -24,6 +24,8 @@ export const useUpdateMyProfile = () => {
     onSuccess: () => {
       // Invalidate profile query to refetch updated data
       queryClient.invalidateQueries({ queryKey: ['student', 'profile', 'me'] });
+      // Invalidate student courses query so course list reflects the new year
+      queryClient.invalidateQueries({ queryKey: ['courses', 'student-courses'] });
     },
   });
 };
