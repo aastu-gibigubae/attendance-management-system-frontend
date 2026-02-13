@@ -9,6 +9,8 @@ import {
   Edit2,
   BarChart3,
   CheckSquare,
+  Printer,
+  FileText 
 } from "lucide-react";
 import { useCourse, useCourseStudents } from "../../hooks/useCourses";
 import { useCourseAttendance } from "../../hooks/useAttendance";
@@ -271,9 +273,6 @@ const CourseDetails = () => {
                                   <div className="screen-only">
                                     <QRCode value={attendanceUrl} size={150} />
                                     <p className="qr-code-text">{att.code}</p>
-                                    <p style={{ fontSize: '10px', marginTop: '8px', color: '#666' }}>
-                                      Scan to open app automatically
-                                    </p>
                                     <div style={{ display: 'flex', gap: '10px', marginTop: '16px', justifyContent: 'center' }}>
                                       <button 
                                         onClick={handlePrint} 
@@ -288,7 +287,7 @@ const CourseDetails = () => {
                                           fontWeight: '500'
                                         }}
                                       >
-                                        🖨️ Print
+                                      <Printer/>  Print
                                       </button>
                                       <button 
                                         onClick={handleDownloadPDF} 
@@ -303,7 +302,7 @@ const CourseDetails = () => {
                                           fontWeight: '500'
                                         }}
                                       >
-                                        � Download PDF
+                                        <FileText/> Download PDF
                                       </button>
                                     </div>
                                   </div>

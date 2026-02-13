@@ -5,7 +5,6 @@ const PrintQR = ({ attendanceUrl, code, courseTitle, date, time }) => {
   const handlePrint = () => {
     window.print();
   };
-
   return (
     <div className="print-qr-container">
       {/* Screen view - show print button */}
@@ -32,19 +31,6 @@ const PrintQR = ({ attendanceUrl, code, courseTitle, date, time }) => {
         <div className="print-code">
           <p className="code-label">Manual Code:</p>
           <p className="code-value">{code}</p>
-        </div>
-
-        <div className="print-instructions">
-          <h3>How to Mark Attendance:</h3>
-          <ol>
-            <li>Scan the QR code with your phone camera</li>
-            <li>Or manually enter the code in the app</li>
-            <li>Submit to record your attendance</li>
-          </ol>
-        </div>
-
-        <div className="print-footer">
-          <p>Scan before the session expires!</p>
         </div>
       </div>
     </div>
