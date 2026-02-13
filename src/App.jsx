@@ -9,6 +9,7 @@ import "./App.css";
 // Auth & Public Pages
 import Login from "./Pages/Login";
 import SignUp from "./Pages/SignUp";
+import AttendanceHandler from "./Pages/AttendanceHandler";
 
 // Student Pages
 import CourseList from "./Pages/Students/CourseList";
@@ -56,7 +57,9 @@ export default function App() {
         <Routes>
           {/* --- Public Routes --- */}
           <Route path="/" element={<Login />} />
+          <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<SignUp />} />
+          <Route path="/attendance" element={<AttendanceHandler />} />
 
           {/* --- Student Routes (Wrapped in Layout, protected) --- */}
           <Route

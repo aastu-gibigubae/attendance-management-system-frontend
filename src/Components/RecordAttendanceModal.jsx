@@ -1,9 +1,9 @@
 "use client"
 
-import { useState, useRef } from "react"
+import { useState, useRef, useEffect } from "react"
 import "../styles/RecordAttendanceModal.css"
 
-const RecordAttendanceModal = ({ isOpen, onClose, onSubmit, date, time }) => {
+const RecordAttendanceModal = ({ isOpen, onClose, onSubmit, initialCode }) => {
   const [code, setCode] = useState("")
   const [isScanning, setIsScanning] = useState(false)
   const [error, setError] = useState("")
@@ -11,12 +11,19 @@ const RecordAttendanceModal = ({ isOpen, onClose, onSubmit, date, time }) => {
   const videoRef = useRef(null)
   const canvasRef = useRef(null)
 
+  // Auto-fill code when initialCode is provided (from QR scan)
+  useEffect(() => {
+    if (initialCode) {
+      setCode(initialCode);
+    }
+  }, [initialCode]);
+
   const handleCodeChange = (e) => {
-   const value = e.target.value.replace(/[^A-Z0-9]/g, "").slice(0, 6)
+    const value = e.target.value.replace(/[^A-Z0-9]/g, "").slice(0, 6)
 
     setCode(value)
     setError("")
-  }
+  } 
 
   const startQRScan = async () => {
     try {
@@ -29,7 +36,7 @@ const RecordAttendanceModal = ({ isOpen, onClose, onSubmit, date, time }) => {
         videoRef.current.srcObject = stream
         videoRef.current.play()
       }
-    } catch (err) {
+    } catch {
       setError("Unable to access camera. Please enter code manually.")
       setIsScanning(false)
     }
@@ -41,13 +48,6 @@ const RecordAttendanceModal = ({ isOpen, onClose, onSubmit, date, time }) => {
       const tracks = videoRef.current.srcObject.getTracks()
       tracks.forEach((track) => track.stop())
     }
-  }
-
-  const handleManualQREntry = () => {
-    // Simulate QR code detection - in production, use jsQR or similar library
-    const simulatedCode = "123456"
-    setCode(simulatedCode)
-    stopQRScan()
   }
 
   const handleSubmit = () => {
@@ -70,7 +70,7 @@ const RecordAttendanceModal = ({ isOpen, onClose, onSubmit, date, time }) => {
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-        {/* Header */}
+      {/* Header */}
         <div className="modal-header">
           <h2 className="modal-title">Record Attendance</h2>
           <button className="modal-close" onClick={onClose}>
@@ -122,9 +122,6 @@ const RecordAttendanceModal = ({ isOpen, onClose, onSubmit, date, time }) => {
                 <video ref={videoRef} className="qr-video" />
                 <canvas ref={canvasRef} style={{ display: "none" }} />
                 <div className="scan-controls">
-                  <button className="scan-button secondary" onClick={handleManualQREntry}>
-                    Simulate Scan
-                  </button>
                   <button className="scan-button danger" onClick={stopQRScan}>
                     Stop Scanning
                   </button>

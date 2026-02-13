@@ -214,8 +214,20 @@ const CourseDetails = () => {
                             className="qr-popup"
                             onClick={(e) => e.stopPropagation()}
                           >
-                            <QRCode value={att.code} size={150} />
-                            <p className="qr-code-text">{att.code}</p>
+                            {/* Generate deep link URL for QR code */}
+                            {(() => {
+                              const attendanceUrl = `${window.location.origin}/attendance?code=${att.code}&courseId=${courseId}`;
+                              return (
+                                <>
+                                  <QRCode value={attendanceUrl} size={150} />
+                                  <p className="qr-code-text">{att.code}</p>
+                                  <p style={{ fontSize: '10px', marginTop: '8px', color: '#666' }}>
+                                    Scan to open app automatically
+                                  </p>
+                                </>
+                              );
+                            })()}
+
                           </div>
                         </div>
                       )}

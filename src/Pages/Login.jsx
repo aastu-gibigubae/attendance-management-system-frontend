@@ -1,13 +1,17 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useLogin } from "../hooks/useAuth";
 import "./Auth.css";
 import ErrorPage from "../Components/ErrorPage";
 
 const Login = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+
+  // Check for redirect parameter (for QR code deep linking)
+  const redirectUrl = searchParams.get('redirect');
 
   // Use React Query mutation hook for login
   const { mutate: login, isPending, error, isError } = useLogin({
@@ -16,11 +20,16 @@ const Login = () => {
       // Store role
       localStorage.setItem("userRole", role);
 
-      // Navigate based on role
-      if (role === "admin" || role === "super_admin") {
-        navigate("/admin/courses");
+      // If there's a redirect URL (from QR code), go there
+      if (redirectUrl) {
+        navigate(decodeURIComponent(redirectUrl));
       } else {
-        navigate("/student/courses");
+        // Otherwise, navigate based on role
+        if (role === "admin" || role === "super_admin") {
+          navigate("/admin/courses");
+        } else {
+          navigate("/student/courses");
+        }
       }
     },
   });

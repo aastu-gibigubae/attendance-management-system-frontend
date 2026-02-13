@@ -17,7 +17,7 @@ const AttendanceCard = ({
       onPendingClick({
         date,
         timeStart,
-        timeEnd,
+        timeEnd, 
         status /* Add other necessary fields like id if needed for modal context */,
       });
     }

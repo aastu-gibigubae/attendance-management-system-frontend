@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { useCourse } from "../../hooks/useCourses";
 import {
   useStudentAttendance,
@@ -15,10 +15,26 @@ import Swal from "sweetalert2";
 const CourseDetail = () => {
   const { id: courseId } = useParams();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
 
   const [viewMode, setViewMode] = useState("cards");
   const [selectedAttendance, setSelectedAttendance] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [autoFillCode, setAutoFillCode] = useState(null);
+
+  // Check for attendance code in URL (from QR code scan)
+  useEffect(() => {
+    const attendanceCode = searchParams.get('attendanceCode');
+    if (attendanceCode) {
+      // Auto-fill the code and open modal
+      setAutoFillCode(attendanceCode);
+      setIsModalOpen(true);
+      
+      // Clear the URL parameter so it doesn't persist
+      searchParams.delete('attendanceCode');
+      setSearchParams(searchParams, { replace: true });
+    }
+  }, [searchParams, setSearchParams]);
 
   // Use React Query hooks for parallel data fetching
   const {
@@ -26,7 +42,7 @@ const CourseDetail = () => {
     isLoading: courseLoading,
     error: courseError,
   } = useCourse(courseId);
-  const {
+  const { 
     data: attendanceData,
     isLoading: attendanceLoading,
     error: attendanceError,
@@ -235,11 +251,14 @@ const CourseDetail = () => {
 
           <RecordAttendanceModal
             isOpen={isModalOpen}
-            onClose={() => setIsModalOpen(false)}
+            onClose={() => {
+              setIsModalOpen(false);
+              setAutoFillCode(null); // Clear auto-fill code when modal closes
+            }}
             onSubmit={handleAttendanceSubmit}
-            date={selectedAttendance?.date}
-            time={`${selectedAttendance?.timeStart} — ${selectedAttendance?.timeEnd}`}
+            initialCode={autoFillCode} // Pass code from QR for auto-fill
           />
+
         </div>
       </div>
     </>
