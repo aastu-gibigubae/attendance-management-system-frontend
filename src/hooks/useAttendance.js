@@ -44,14 +44,23 @@ export const useCreateAttendance = () => {
   return useMutation({
     mutationFn: attendanceService.createAttendance,
     onSuccess: (_, variables) => {
-      // Invalidate admin's attendance view for the course
+      console.log('🎯 Attendance created! CourseId:', variables.courseId);
+      console.log('🔄 Invalidating admin query:', attendanceKeys.byCourse(variables.courseId));
+      console.log('🔄 Invalidating student query:', attendanceKeys.studentByCourse(variables.courseId));
+      
+      // Invalidate and refetch admin's attendance view for the course
       queryClient.invalidateQueries({ 
-        queryKey: attendanceKeys.byCourse(variables.courseId) 
+        queryKey: attendanceKeys.byCourse(variables.courseId),
+        refetchType: 'active' // Refetch active queries immediately
       });
-      // Invalidate student's attendance view for the course
+      
+      // Invalidate and refetch student's attendance view for the course
       queryClient.invalidateQueries({ 
-        queryKey: attendanceKeys.studentByCourse(variables.courseId) 
+        queryKey: attendanceKeys.studentByCourse(variables.courseId),
+        refetchType: 'active' // Refetch active queries immediately
       });
+      
+      console.log('✅ Both queries invalidated with active refetch!');
     },
   });
 };
