@@ -8,6 +8,7 @@ import {
   GraduationCap,
   LogOut,
   BarChart3,
+  UserPlus,
 } from "lucide-react";
 import { useLogout } from "../../hooks/useAuth";
 import "../../styles/AdminSidebar.css";
@@ -95,6 +96,15 @@ const AdminSidebar = ({ collapsed, setCollapsed }) => {
         >
           <Users size={20} />
           {!collapsed && <span>Student Management</span>}
+        </li>
+
+        <li
+          onClick={() => navigate("/admin/register-student")}
+          className={isActive("/admin/register-student") ? "active" : ""}
+          title={collapsed ? "Register Student" : ""}
+        >
+          <UserPlus size={20} />
+          {!collapsed && <span>Register Student</span>}
         </li>
 
         <li

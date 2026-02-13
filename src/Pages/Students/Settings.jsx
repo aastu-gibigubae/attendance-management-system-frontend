@@ -51,9 +51,28 @@ const Settings = () => {
     <div className="settings-page">
       <div className="settings-container">
         <div className="settings-header">
-          <button onClick={handleBack}>
+          <button 
+            onClick={handleBack}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              background: 'transparent',
+              border: 'none',
+              color: '#3b82f6',
+              fontSize: '15px',
+              fontWeight: '500',
+              cursor: 'pointer',
+              padding: '8px 12px',
+              borderRadius: '6px',
+              transition: 'background 0.2s',
+              marginBottom: '12px'
+            }}
+            onMouseEnter={(e) => e.currentTarget.style.background = '#eff6ff'}
+            onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+          >
             <ArrowLeft size={20} />
-            Back
+            Back to Courses
           </button>
           <h1>Settings</h1>
           <p>Update your academic year</p>

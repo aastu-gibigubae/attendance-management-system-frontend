@@ -26,6 +26,7 @@ import CourseDetails from "./Pages/Admin/CourseDetails";
 import StudentList from "./Pages/Admin/StudentList";
 import EnrollmentManager from "./Pages/Admin/EnrollmentManager";
 import AnalyticsOverview from "./Pages/Admin/AnalyticsOverview";
+import RegisterStudent from "./Pages/Admin/RegisterStudent";
 import ErrorBoundary from "./Components/ErrorBoundary";
 
 // Protected Route Component (string-only roles)
@@ -91,6 +92,7 @@ export default function App() {
             <Route path="create-course" element={<CreateCourses />} />
             <Route path="course/:courseId" element={<CourseDetails />} />
             <Route path="student-management" element={<StudentList />} />
+            <Route path="register-student" element={<RegisterStudent />} />
             <Route path="Enroll-students" element={<EnrollmentManager />} />
             <Route path="analytics" element={<AnalyticsOverview />} />
 

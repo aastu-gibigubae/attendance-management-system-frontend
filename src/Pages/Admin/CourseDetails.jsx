@@ -13,8 +13,7 @@ import {
   FileText 
 } from "lucide-react";
 import { useCourse, useCourseStudents } from "../../hooks/useCourses";
-import { useCourseAttendance } from "../../hooks/useAttendance";
-import CreateAttendanceModal from "../../Components/CreateAttendanceModal";
+import { useCourseAttendance, useCreateAttendance } from "../../hooks/useAttendance";
 import AttendanceTable from "../../Components/AttendanceTable";
 import "../../styles/CourseDetails.css";
 import LoadingPage from "../../Components/LoadingPage";
@@ -25,13 +24,16 @@ const CourseDetails = () => {
   const navigate = useNavigate();
 
   const [showQRCode, setShowQRCode] = useState(false);
-  const [isModalOpen, setIsModalOpen] = useState(false);
   const [showAttendanceTable, setShowAttendanceTable] = useState(false);
+  const [successMessage, setSuccessMessage] = useState("");
 
   // Use React Query hooks for parallel data fetching
   const { data: courseData, isLoading: courseLoading, error: courseError } = useCourse(courseId);
   const { data: studentsData, isLoading: studentsLoading } = useCourseStudents(courseId);
   const { data: attendanceData, isLoading: attendanceLoading, error: attendanceError } = useCourseAttendance(courseId);
+  
+  // Create attendance mutation
+  const createAttendanceMutation = useCreateAttendance();
 
   // Combined loading and error states
   const isLoading = courseLoading || studentsLoading || attendanceLoading;
@@ -66,8 +68,20 @@ const CourseDetails = () => {
 
   const reversedAttendance = [...attendance].reverse();
 
-  const handleAttendanceCreated = () => {
-    setShowAttendanceTable(true);
+  const handleCreateAttendance = () => {
+    createAttendanceMutation.mutate(
+      { courseId },
+      {
+        onSuccess: () => {
+          setSuccessMessage("Attendance created successfully!");
+          setTimeout(() => setSuccessMessage(""), 3000);
+        },
+        onError: (error) => {
+          console.error("Error creating attendance:", error);
+          alert(error?.response?.data?.message || "Failed to create attendance");
+        },
+      }
+    );
   };
 
   if (isLoading) return <LoadingPage message="Loading course details..." />;
@@ -334,12 +348,33 @@ const CourseDetails = () => {
 
         {/* Action Buttons */}
         <div className="action-buttons">
+          {/* Success Message */}
+          {successMessage && (
+            <div style={{
+              position: 'fixed',
+              top: '20px',
+              left: '50%',
+              transform: 'translateX(-50%)',
+              background: '#10b981',
+              color: 'white',
+              padding: '14px 24px',
+              borderRadius: '8px',
+              boxShadow: '0 4px 12px rgba(16, 185, 129, 0.3)',
+              zIndex: 1000,
+              fontWeight: '600',
+              fontSize: '14px'
+            }}>
+              ✓ {successMessage}
+            </div>
+          )}
+          
           <button
             className="btn btn-primary"
-            onClick={() => setIsModalOpen(true)}
+            onClick={handleCreateAttendance}
+            disabled={createAttendanceMutation.isPending}
           >
             <span className="btn-icon">+</span>
-            Create Attendance
+            {createAttendanceMutation.isPending ? "Creating..." : "Create Attendance"}
           </button>
 
           <button
@@ -358,14 +393,6 @@ const CourseDetails = () => {
             Analytics
           </button>
         </div>
-
-        {/* Modal with Success Callback */}
-        <CreateAttendanceModal
-          isOpen={isModalOpen}
-          onClose={() => setIsModalOpen(false)}
-          onSuccess={handleAttendanceCreated}
-          courseTitle={course.title}
-        />
       </div>
     </>
   );
