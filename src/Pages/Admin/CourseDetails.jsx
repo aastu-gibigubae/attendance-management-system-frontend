@@ -219,10 +219,6 @@ const CourseDetails = () => {
                             {/* Generate deep link URL for QR code */}
                             {(() => {
                               const attendanceUrl = `${window.location.origin}/attendance?code=${att.code}&courseId=${courseId}`;
-                              
-                              const handlePrint = () => {
-                                window.print();
-                              };
 
                               const handleDownloadPDF = async () => {
                                 try {
@@ -231,7 +227,7 @@ const CourseDetails = () => {
                                   const { jsPDF } = await import('jspdf');
 
                                   // Get the print content element
-                                  const printElement = document.querySelector('.print-only');
+                                  const printElement = document.querySelector('.pdf-content');
                                   if (!printElement) return;
 
                                   // Temporarily show the element
@@ -263,7 +259,7 @@ const CourseDetails = () => {
                                   pdf.save(`Attendance-QR-${att.code}.pdf`);
                                 } catch (error) {
                                   console.error('Error generating PDF:', error);
-                                  alert('Failed to generate PDF. Please try printing instead.');
+                                  alert('Failed to generate PDF. Please try again.');
                                 }
                               };
                               
@@ -273,42 +269,29 @@ const CourseDetails = () => {
                                   <div className="screen-only">
                                     <QRCode value={attendanceUrl} size={150} />
                                     <p className="qr-code-text">{att.code}</p>
-                                    <div style={{ display: 'flex', gap: '10px', marginTop: '16px', justifyContent: 'center' }}>
-                                      <button 
-                                        onClick={handlePrint} 
-                                        style={{
-                                          padding: '10px 20px',
-                                          background: '#4CAF50',
-                                          color: 'white',
-                                          border: 'none',
-                                          borderRadius: '8px',
-                                          cursor: 'pointer',
-                                          fontSize: '14px',
-                                          fontWeight: '500'
-                                        }}
-                                      >
-                                      <Printer/>  Print
-                                      </button>
-                                      <button 
-                                        onClick={handleDownloadPDF} 
-                                        style={{
-                                          padding: '10px 20px',
-                                          background: '#2196F3',
-                                          color: 'white',
-                                          border: 'none',
-                                          borderRadius: '8px',
-                                          cursor: 'pointer',
-                                          fontSize: '14px',
-                                          fontWeight: '500'
-                                        }}
-                                      >
-                                        <FileText/> Download PDF
-                                      </button>
-                                    </div>
+                                    <button 
+                                      onClick={handleDownloadPDF} 
+                                      style={{
+                                        marginTop: '16px',
+                                        padding: '12px 24px',
+                                        background: '#2196F3',
+                                        color: 'white',
+                                        border: 'none',
+                                        borderRadius: '8px',
+                                        cursor: 'pointer',
+                                        fontSize: '14px',
+                                        fontWeight: '500',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: '8px'
+                                      }}
+                                    >
+                                      <FileText size={18} /> Download PDF
+                                    </button>
                                   </div>
 
-                                  {/* Print View - Hidden on screen */}
-                                  <div className="print-only" style={{ display: 'none' }}>
+                                  {/* PDF Content - Hidden on screen */}
+                                  <div className="pdf-content" style={{ display: 'none' }}>
                                     <div style={{ padding: '40px', textAlign: 'center' }}>
                                       <h1 style={{ fontSize: '28px', margin: '0 0 10px' }}>{course.title}</h1>
                                       <h2 style={{ fontSize: '20px', margin: '0 0 10px', fontWeight: 'normal' }}>Attendance QR Code</h2>

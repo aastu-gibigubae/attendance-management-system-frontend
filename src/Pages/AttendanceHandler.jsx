@@ -11,6 +11,8 @@ import LoadingPage from '../Components/LoadingPage';
  * 3. Checks if user is authenticated (via userRole in localStorage)
  * 4. Redirects to course detail page with code to auto-fill
  */
+
+
 const AttendanceHandler = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
