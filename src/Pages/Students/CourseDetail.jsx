@@ -133,17 +133,36 @@ const CourseDetail = () => {
   };
 
   const handleAttendanceSubmit = async (code) => {
-    if (!selectedAttendance) return;
+    // When opened via QR code, selectedAttendance might be null
+    // In that case, find the matching attendance record by code
+    let attendanceToSubmit = selectedAttendance;
+    
+    if (!attendanceToSubmit) {
+      // Find the attendance record that matches the code
+      attendanceToSubmit = attendanceRecords.find(record => record.code === code);
+      
+      if (!attendanceToSubmit) {
+        Swal.fire({
+          icon: "error",
+          title: "Invalid Code",
+          text: "No matching attendance session found for this code.",
+        });
+        return;
+      }
+    }
 
     markAttendanceMutation.mutate(
       {
-        attendanceId: selectedAttendance.id,
+        attendanceId: attendanceToSubmit.id,
         code,
       },
       {
         onSuccess: () => {
           // The modal will close after success
           // React Query automatically refetches the attendance data
+          setIsModalOpen(false);
+          setAutoFillCode(null);
+          setSelectedAttendance(null);
         },
         onError: (error) => {
           Swal.fire({
