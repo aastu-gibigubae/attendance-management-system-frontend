@@ -1,0 +1,164 @@
+/* Print QR Code Styles */
+
+.print-qr-container {
+  text-align: center;
+}
+
+/* Screen-only elements */
+.screen-only {
+  margin-top: 16px;
+}
+
+.print-qr-button {
+  background: #4caf50;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: background 0.2s;
+}
+
+.print-qr-button:hover {
+  background: #45a049;
+}
+
+/* Print content - hidden on screen */
+.print-content {
+  display: none;
+}
+
+/* Print-specific styles */
+@media print {
+  /* Hide everything except print content */
+  body * {
+    visibility: hidden;
+  }
+
+  .print-content,
+  .print-content * {
+    visibility: visible;
+  }
+
+  .print-content {
+    display: block;
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    padding: 40px;
+    background: white;
+  }
+
+  /* Hide screen-only elements when printing */
+  .screen-only {
+    display: none !important;
+  }
+
+  /* Print header */
+  .print-header {
+    text-align: center;
+    margin-bottom: 30px;
+  }
+
+  .print-header h1 {
+    font-size: 28px;
+    margin: 0 0 10px 0;
+    color: #333;
+  }
+
+  .print-header h2 {
+    font-size: 20px;
+    margin: 0 0 10px 0;
+    color: #666;
+    font-weight: normal;
+  }
+
+  .print-datetime {
+    font-size: 14px;
+    color: #999;
+    margin: 0;
+  }
+
+  /* QR Code */
+  .print-qr-wrapper {
+    display: flex;
+    justify-content: center;
+    margin: 40px 0;
+    padding: 20px;
+    border: 2px solid #333;
+    border-radius: 12px;
+  }
+
+  /* Manual code */
+  .print-code {
+    text-align: center;
+    margin: 30px 0;
+    padding: 20px;
+    background: #f5f5f5;
+    border-radius: 8px;
+  }
+
+  .code-label {
+    font-size: 14px;
+    color: #666;
+    margin: 0 0 8px 0;
+  }
+
+  .code-value {
+    font-size: 32px;
+    font-weight: bold;
+    letter-spacing: 4px;
+    margin: 0;
+    color: #333;
+    font-family: monospace;
+  }
+
+  /* Instructions */
+  .print-instructions {
+    margin: 30px 0;
+    text-align: left;
+  }
+
+  .print-instructions h3 {
+    font-size: 18px;
+    margin: 0 0 15px 0;
+    color: #333;
+  }
+
+  .print-instructions ol {
+    margin: 0;
+    padding-left: 25px;
+  }
+
+  .print-instructions li {
+    font-size: 14px;
+    line-height: 1.8;
+    color: #555;
+    margin-bottom: 8px;
+  }
+
+  /* Footer */
+  .print-footer {
+    text-align: center;
+    margin-top: 40px;
+    padding-top: 20px;
+    border-top: 1px solid #ddd;
+  }
+
+  .print-footer p {
+    font-size: 12px;
+    color: #999;
+    margin: 0;
+  }
+
+  /* Page breaks */
+  .print-qr-container {
+    page-break-inside: avoid;
+  }
+}

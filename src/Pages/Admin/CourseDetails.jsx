@@ -217,16 +217,127 @@ const CourseDetails = () => {
                             {/* Generate deep link URL for QR code */}
                             {(() => {
                               const attendanceUrl = `${window.location.origin}/attendance?code=${att.code}&courseId=${courseId}`;
+                              
+                              const handlePrint = () => {
+                                window.print();
+                              };
+
+                              const handleDownloadPDF = async () => {
+                                try {
+                                  // Dynamically import libraries
+                                  const html2canvas = (await import('html2canvas')).default;
+                                  const { jsPDF } = await import('jspdf');
+
+                                  // Get the print content element
+                                  const printElement = document.querySelector('.print-only');
+                                  if (!printElement) return;
+
+                                  // Temporarily show the element
+                                  printElement.style.display = 'block';
+                                  printElement.style.position = 'relative';
+
+                                  // Capture as canvas
+                                  const canvas = await html2canvas(printElement, {
+                                    scale: 2,
+                                    backgroundColor: '#ffffff',
+                                  });
+
+                                  // Hide it again
+                                  printElement.style.display = 'none';
+                                  printElement.style.position = 'absolute';
+
+                                  // Create PDF
+                                  const imgData = canvas.toDataURL('image/png');
+                                  const pdf = new jsPDF({
+                                    orientation: 'portrait',
+                                    unit: 'mm',
+                                    format: 'a4',
+                                  });
+
+                                  const imgWidth = 210; // A4 width in mm
+                                  const imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+                                  pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
+                                  pdf.save(`Attendance-QR-${att.code}.pdf`);
+                                } catch (error) {
+                                  console.error('Error generating PDF:', error);
+                                  alert('Failed to generate PDF. Please try printing instead.');
+                                }
+                              };
+                              
                               return (
                                 <>
-                                  <QRCode value={attendanceUrl} size={150} />
-                                  <p className="qr-code-text">{att.code}</p>
-                                  <p style={{ fontSize: '10px', marginTop: '8px', color: '#666' }}>
-                                    Scan to open app automatically
-                                  </p>
+                                  {/* Screen View */}
+                                  <div className="screen-only">
+                                    <QRCode value={attendanceUrl} size={150} />
+                                    <p className="qr-code-text">{att.code}</p>
+                                    <p style={{ fontSize: '10px', marginTop: '8px', color: '#666' }}>
+                                      Scan to open app automatically
+                                    </p>
+                                    <div style={{ display: 'flex', gap: '10px', marginTop: '16px', justifyContent: 'center' }}>
+                                      <button 
+                                        onClick={handlePrint} 
+                                        style={{
+                                          padding: '10px 20px',
+                                          background: '#4CAF50',
+                                          color: 'white',
+                                          border: 'none',
+                                          borderRadius: '8px',
+                                          cursor: 'pointer',
+                                          fontSize: '14px',
+                                          fontWeight: '500'
+                                        }}
+                                      >
+                                        🖨️ Print
+                                      </button>
+                                      <button 
+                                        onClick={handleDownloadPDF} 
+                                        style={{
+                                          padding: '10px 20px',
+                                          background: '#2196F3',
+                                          color: 'white',
+                                          border: 'none',
+                                          borderRadius: '8px',
+                                          cursor: 'pointer',
+                                          fontSize: '14px',
+                                          fontWeight: '500'
+                                        }}
+                                      >
+                                        � Download PDF
+                                      </button>
+                                    </div>
+                                  </div>
+
+                                  {/* Print View - Hidden on screen */}
+                                  <div className="print-only" style={{ display: 'none' }}>
+                                    <div style={{ padding: '40px', textAlign: 'center' }}>
+                                      <h1 style={{ fontSize: '28px', margin: '0 0 10px' }}>{course.title}</h1>
+                                      <h2 style={{ fontSize: '20px', margin: '0 0 10px', fontWeight: 'normal' }}>Attendance QR Code</h2>
+                                      <p style={{ fontSize: '14px', color: '#999' }}>{att.date} • {att.time}</p>
+                                      
+                                      <div style={{ margin: '40px 0', padding: '20px', border: '2px solid #333', borderRadius: '12px', display: 'inline-block' }}>
+                                        <QRCode value={attendanceUrl} size={300} />
+                                      </div>
+                                      
+                                      <div style={{ margin: '30px 0', padding: '20px', background: '#f5f5f5', borderRadius: '8px' }}>
+                                        <p style={{ fontSize: '14px', color: '#666', margin: '0 0 8px' }}>Manual Code:</p>
+                                        <p style={{ fontSize: '32px', fontWeight: 'bold', letterSpacing: '4px', margin: 0, fontFamily: 'monospace' }}>{att.code}</p>
+                                      </div>
+                                      
+                                      <div style={{ margin: '30px 0', textAlign: 'left', maxWidth: '500px', marginLeft: 'auto', marginRight: 'auto' }}>
+                                        <h3 style={{ fontSize: '18px', marginBottom: '15px' }}>How to Mark Attendance:</h3>
+                                        <ol style={{ paddingLeft: '25px', lineHeight: '1.8' }}>
+                                          <li>Scan the QR code with your phone camera</li>
+                                          <li>Or manually enter the code in the app</li>
+                                          <li>Submit to record your attendance</li>
+                                        </ol>
+                                      </div>
+                                    </div>
+                                  </div>
                                 </>
                               );
                             })()}
+
 
                           </div>
                         </div>

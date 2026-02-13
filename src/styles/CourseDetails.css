@@ -370,3 +370,34 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* Print Styles */
+@media print {
+  /* Hide everything except print content */
+  body * {
+    visibility: hidden;
+  }
+
+  .print-only,
+  .print-only * {
+    visibility: visible !important;
+    display: block !important;
+  }
+
+  .screen-only {
+    display: none !important;
+  }
+
+  .print-only {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    background: white;
+  }
+
+  /* Prevent page breaks inside QR code */
+  .print-only > div {
+    page-break-inside: avoid;
+  }
+}
