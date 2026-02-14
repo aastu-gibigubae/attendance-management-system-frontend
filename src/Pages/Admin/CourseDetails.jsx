@@ -10,10 +10,13 @@ import {
   BarChart3,
   CheckSquare,
   Printer,
-  FileText 
+  FileText,
 } from "lucide-react";
 import { useCourse, useCourseStudents } from "../../hooks/useCourses";
-import { useCourseAttendance, useCreateAttendance } from "../../hooks/useAttendance";
+import {
+  useCourseAttendance,
+  useCreateAttendance,
+} from "../../hooks/useAttendance";
 import AttendanceTable from "../../Components/AttendanceTable";
 import "../../styles/CourseDetails.css";
 import LoadingPage from "../../Components/LoadingPage";
@@ -28,10 +31,19 @@ const CourseDetails = () => {
   const [successMessage, setSuccessMessage] = useState("");
 
   // Use React Query hooks for parallel data fetching
-  const { data: courseData, isLoading: courseLoading, error: courseError } = useCourse(courseId);
-  const { data: studentsData, isLoading: studentsLoading } = useCourseStudents(courseId);
-  const { data: attendanceData, isLoading: attendanceLoading, error: attendanceError } = useCourseAttendance(courseId);
-  
+  const {
+    data: courseData,
+    isLoading: courseLoading,
+    error: courseError,
+  } = useCourse(courseId);
+  const { data: studentsData, isLoading: studentsLoading } =
+    useCourseStudents(courseId);
+  const {
+    data: attendanceData,
+    isLoading: attendanceLoading,
+    error: attendanceError,
+  } = useCourseAttendance(courseId);
+
   // Create attendance mutation
   const createAttendanceMutation = useCreateAttendance();
 
@@ -70,7 +82,10 @@ const CourseDetails = () => {
 
   const handleCreateAttendance = () => {
     createAttendanceMutation.mutate(
-      { courseId },
+      {
+        courseId,
+        minutes: 15, // Default: 15 minutes attendance window
+      },
       {
         onSuccess: () => {
           setSuccessMessage("Attendance created successfully!");
@@ -78,9 +93,11 @@ const CourseDetails = () => {
         },
         onError: (error) => {
           console.error("Error creating attendance:", error);
-          alert(error?.response?.data?.message || "Failed to create attendance");
+          alert(
+            error?.response?.data?.message || "Failed to create attendance",
+          );
         },
-      }
+      },
     );
   };
 
@@ -88,7 +105,11 @@ const CourseDetails = () => {
   if (error)
     return (
       <ErrorPage
-        message={error?.response?.data?.message || error?.message || "Failed to load details"}
+        message={
+          error?.response?.data?.message ||
+          error?.message ||
+          "Failed to load details"
+        }
         title="Failed to Load Course"
         onRetry={() => window.location.reload()}
       />
@@ -237,67 +258,83 @@ const CourseDetails = () => {
                               const handleDownloadPDF = async () => {
                                 try {
                                   // Dynamically import libraries
-                                  const html2canvas = (await import('html2canvas')).default;
-                                  const { jsPDF } = await import('jspdf');
+                                  const html2canvas = (
+                                    await import("html2canvas")
+                                  ).default;
+                                  const { jsPDF } = await import("jspdf");
 
                                   // Get the print content element
-                                  const printElement = document.querySelector('.pdf-content');
+                                  const printElement =
+                                    document.querySelector(".pdf-content");
                                   if (!printElement) return;
 
                                   // Temporarily show the element
-                                  printElement.style.display = 'block';
-                                  printElement.style.position = 'relative';
+                                  printElement.style.display = "block";
+                                  printElement.style.position = "relative";
 
                                   // Capture as canvas
-                                  const canvas = await html2canvas(printElement, {
-                                    scale: 2,
-                                    backgroundColor: '#ffffff',
-                                  });
+                                  const canvas = await html2canvas(
+                                    printElement,
+                                    {
+                                      scale: 2,
+                                      backgroundColor: "#ffffff",
+                                    },
+                                  );
 
                                   // Hide it again
-                                  printElement.style.display = 'none';
-                                  printElement.style.position = 'absolute';
+                                  printElement.style.display = "none";
+                                  printElement.style.position = "absolute";
 
                                   // Create PDF
-                                  const imgData = canvas.toDataURL('image/png');
+                                  const imgData = canvas.toDataURL("image/png");
                                   const pdf = new jsPDF({
-                                    orientation: 'portrait',
-                                    unit: 'mm',
-                                    format: 'a4',
+                                    orientation: "portrait",
+                                    unit: "mm",
+                                    format: "a4",
                                   });
 
                                   const imgWidth = 210; // A4 width in mm
-                                  const imgHeight = (canvas.height * imgWidth) / canvas.width;
+                                  const imgHeight =
+                                    (canvas.height * imgWidth) / canvas.width;
 
-                                  pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
+                                  pdf.addImage(
+                                    imgData,
+                                    "PNG",
+                                    0,
+                                    0,
+                                    imgWidth,
+                                    imgHeight,
+                                  );
                                   pdf.save(`Attendance-QR-${att.code}.pdf`);
                                 } catch (error) {
-                                  console.error('Error generating PDF:', error);
-                                  alert('Failed to generate PDF. Please try again.');
+                                  console.error("Error generating PDF:", error);
+                                  alert(
+                                    "Failed to generate PDF. Please try again.",
+                                  );
                                 }
                               };
-                              
+
                               return (
                                 <>
                                   {/* Screen View */}
                                   <div className="screen-only">
                                     <QRCode value={attendanceUrl} size={150} />
                                     <p className="qr-code-text">{att.code}</p>
-                                    <button 
-                                      onClick={handleDownloadPDF} 
+                                    <button
+                                      onClick={handleDownloadPDF}
                                       style={{
-                                        marginTop: '16px',
-                                        padding: '12px 24px',
-                                        background: '#2196F3',
-                                        color: 'white',
-                                        border: 'none',
-                                        borderRadius: '8px',
-                                        cursor: 'pointer',
-                                        fontSize: '14px',
-                                        fontWeight: '500',
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        gap: '8px'
+                                        marginTop: "16px",
+                                        padding: "12px 24px",
+                                        background: "#2196F3",
+                                        color: "white",
+                                        border: "none",
+                                        borderRadius: "8px",
+                                        cursor: "pointer",
+                                        fontSize: "14px",
+                                        fontWeight: "500",
+                                        display: "flex",
+                                        alignItems: "center",
+                                        gap: "8px",
                                       }}
                                     >
                                       <FileText size={18} /> Download PDF
@@ -305,27 +342,121 @@ const CourseDetails = () => {
                                   </div>
 
                                   {/* PDF Content - Hidden on screen */}
-                                  <div className="pdf-content" style={{ display: 'none' }}>
-                                    <div style={{ padding: '40px', textAlign: 'center' }}>
-                                      <h1 style={{ fontSize: '28px', margin: '0 0 10px' }}>{course.title}</h1>
-                                      <h2 style={{ fontSize: '20px', margin: '0 0 10px', fontWeight: 'normal' }}>Attendance QR Code</h2>
-                                      <p style={{ fontSize: '14px', color: '#999' }}>{att.date} • {att.time}</p>
-                                      
-                                      <div style={{ margin: '40px 0', padding: '20px', border: '2px solid #333', borderRadius: '12px', display: 'inline-block' }}>
-                                        <QRCode value={attendanceUrl} size={300} />
+                                  <div
+                                    className="pdf-content"
+                                    style={{ display: "none" }}
+                                  >
+                                    <div
+                                      style={{
+                                        padding: "40px",
+                                        textAlign: "center",
+                                      }}
+                                    >
+                                      <h1
+                                        style={{
+                                          fontSize: "28px",
+                                          margin: "0 0 10px",
+                                        }}
+                                      >
+                                        {course.title}
+                                      </h1>
+                                      <h2
+                                        style={{
+                                          fontSize: "20px",
+                                          margin: "0 0 10px",
+                                          fontWeight: "normal",
+                                        }}
+                                      >
+                                        Attendance QR Code
+                                      </h2>
+                                      <p
+                                        style={{
+                                          fontSize: "14px",
+                                          color: "#999",
+                                        }}
+                                      >
+                                        {att.date} • {att.time}
+                                      </p>
+
+                                      <div
+                                        style={{
+                                          margin: "40px 0",
+                                          padding: "20px",
+                                          border: "2px solid #333",
+                                          borderRadius: "12px",
+                                          display: "inline-block",
+                                        }}
+                                      >
+                                        <QRCode
+                                          value={attendanceUrl}
+                                          size={300}
+                                        />
                                       </div>
-                                      
-                                      <div style={{ margin: '30px 0', padding: '20px', background: '#f5f5f5', borderRadius: '8px' }}>
-                                        <p style={{ fontSize: '14px', color: '#666', margin: '0 0 8px' }}>Manual Code:</p>
-                                        <p style={{ fontSize: '32px', fontWeight: 'bold', letterSpacing: '4px', margin: 0, fontFamily: 'monospace' }}>{att.code}</p>
+
+                                      <div
+                                        style={{
+                                          margin: "30px 0",
+                                          padding: "20px",
+                                          background: "#f5f5f5",
+                                          borderRadius: "8px",
+                                        }}
+                                      >
+                                        <p
+                                          style={{
+                                            fontSize: "14px",
+                                            color: "#666",
+                                            margin: "0 0 8px",
+                                          }}
+                                        >
+                                          Manual Code:
+                                        </p>
+                                        <p
+                                          style={{
+                                            fontSize: "32px",
+                                            fontWeight: "bold",
+                                            letterSpacing: "4px",
+                                            margin: 0,
+                                            fontFamily: "monospace",
+                                          }}
+                                        >
+                                          {att.code}
+                                        </p>
                                       </div>
-                                      
-                                      <div style={{ margin: '30px 0', textAlign: 'left', maxWidth: '500px', marginLeft: 'auto', marginRight: 'auto' }}>
-                                        <h3 style={{ fontSize: '18px', marginBottom: '15px' }}>How to Mark Attendance:</h3>
-                                        <ol style={{ paddingLeft: '25px', lineHeight: '1.8' }}>
-                                          <li>Scan the QR code with your phone camera</li>
-                                          <li>Or manually enter the code in the app</li>
-                                          <li>Submit to record your attendance</li>
+
+                                      <div
+                                        style={{
+                                          margin: "30px 0",
+                                          textAlign: "left",
+                                          maxWidth: "500px",
+                                          marginLeft: "auto",
+                                          marginRight: "auto",
+                                        }}
+                                      >
+                                        <h3
+                                          style={{
+                                            fontSize: "18px",
+                                            marginBottom: "15px",
+                                          }}
+                                        >
+                                          How to Mark Attendance:
+                                        </h3>
+                                        <ol
+                                          style={{
+                                            paddingLeft: "25px",
+                                            lineHeight: "1.8",
+                                          }}
+                                        >
+                                          <li>
+                                            Scan the QR code with your phone
+                                            camera
+                                          </li>
+                                          <li>
+                                            Or manually enter the code in the
+                                            app
+                                          </li>
+                                          <li>
+                                            Submit to record your attendance
+                                          </li>
                                         </ol>
                                       </div>
                                     </div>
@@ -333,8 +464,6 @@ const CourseDetails = () => {
                                 </>
                               );
                             })()}
-
-
                           </div>
                         </div>
                       )}
@@ -350,31 +479,35 @@ const CourseDetails = () => {
         <div className="action-buttons">
           {/* Success Message */}
           {successMessage && (
-            <div style={{
-              position: 'fixed',
-              top: '20px',
-              left: '50%',
-              transform: 'translateX(-50%)',
-              background: '#10b981',
-              color: 'white',
-              padding: '14px 24px',
-              borderRadius: '8px',
-              boxShadow: '0 4px 12px rgba(16, 185, 129, 0.3)',
-              zIndex: 1000,
-              fontWeight: '600',
-              fontSize: '14px'
-            }}>
+            <div
+              style={{
+                position: "fixed",
+                top: "20px",
+                left: "50%",
+                transform: "translateX(-50%)",
+                background: "#10b981",
+                color: "white",
+                padding: "14px 24px",
+                borderRadius: "8px",
+                boxShadow: "0 4px 12px rgba(16, 185, 129, 0.3)",
+                zIndex: 1000,
+                fontWeight: "600",
+                fontSize: "14px",
+              }}
+            >
               ✓ {successMessage}
             </div>
           )}
-          
+
           <button
             className="btn btn-primary"
             onClick={handleCreateAttendance}
             disabled={createAttendanceMutation.isPending}
           >
             <span className="btn-icon">+</span>
-            {createAttendanceMutation.isPending ? "Creating..." : "Create Attendance"}
+            {createAttendanceMutation.isPending
+              ? "Creating..."
+              : "Create Attendance"}
           </button>
 
           <button
