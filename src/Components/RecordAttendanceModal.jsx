@@ -15,7 +15,6 @@ const RecordAttendanceModal = ({ isOpen, onClose, onSubmit, initialCode }) => {
 
   const handleCodeChange = (e) => {
     const value = e.target.value.replace(/[^A-Z0-9]/g, "").slice(0, 6)
-
     setCode(value)
     setError("")
   } 
