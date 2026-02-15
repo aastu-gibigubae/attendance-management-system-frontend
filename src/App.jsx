@@ -4,6 +4,7 @@ import {
   Route,
   Navigate,
 } from "react-router-dom";
+import { Analytics } from '@vercel/analytics/react';
 import "./App.css";
 
 // Auth & Public Pages
@@ -54,6 +55,7 @@ const ProtectedRoute = ({ children, requiredRole }) => {
 export default function App() {
   return (
     <ErrorBoundary>
+      <Analytics />
       <Router>
         <Routes>
           {/* --- Public Routes --- */}

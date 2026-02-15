@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Search, Edit2, Trash2, X, Save, Eye } from "lucide-react";
+import { Search, Edit2, Trash2, X, Save } from "lucide-react";
 import Swal from "sweetalert2";
 import { useStudents, useUpdateStudent, useDeleteStudent } from "../../hooks/useStudents";
 import "../../styles/StudentList.css";
@@ -17,10 +17,22 @@ const StudentList = () => {
 
   // State for Editing
   const [editingStudent, setEditingStudent] = useState(null);
-  const [viewingStudent, setViewingStudent] = useState(null);
   const [editForm, setEditForm] = useState({
+    first_name: "",
+    father_name: "",
+    grand_father_name: "",
+    christian_name: "",
+    id_number: "",
+    email: "",
+    password: "",
+    gender: "",
+    phone_number: "",
     department: "",
     year: "",
+    dorm_block: "",
+    room_number: "",
+    is_verified: false,
+    role: "",
   });
 
   // Get students list - use search results if available, otherwise use all students
@@ -105,8 +117,21 @@ const StudentList = () => {
   const openEditModal = (student) => {
     setEditingStudent(student);
     setEditForm({
+      first_name: student.first_name || "",
+      father_name: student.father_name || "",
+      grand_father_name: student.grand_father_name || "",
+      christian_name: student.christian_name || "",
+      id_number: student.id_number || "",
+      email: student.email || "",
+      password: "", // Always empty for security
+      gender: student.gender || "",
+      phone_number: student.phone_number || "",
       department: student.department || "",
       year: student.year || "",
+      dorm_block: student.dorm_block || "",
+      room_number: student.room_number || "",
+      is_verified: student.is_verified || false,
+      role: student.role || "",
     });
   };
 
@@ -118,9 +143,26 @@ const StudentList = () => {
     e.preventDefault();
 
     const payload = {
-      year: parseInt(editForm.year, 10),
+      first_name: editForm.first_name,
+      father_name: editForm.father_name,
+      grand_father_name: editForm.grand_father_name,
+      christian_name: editForm.christian_name,
+      id_number: editForm.id_number,
+      email: editForm.email,
+      gender: editForm.gender,
+      phone_number: editForm.phone_number,
       department: editForm.department,
+      year: parseInt(editForm.year, 10),
+      dorm_block: editForm.dorm_block,
+      room_number: editForm.room_number,
+      is_verified: editForm.is_verified,
+      role: editForm.role,
     };
+
+    // Only include password if it's been filled in
+    if (editForm.password && editForm.password.trim() !== "") {
+      payload.password = editForm.password;
+    }
 
     updateStudentMutation.mutate(
       { id: editingStudent.id, data: payload },
@@ -209,13 +251,6 @@ const StudentList = () => {
                       </td>
                       <td className="action-cell">
                         <button
-                          className="btn-icon view"
-                          onClick={() => setViewingStudent(student)}
-                          title="View Details"
-                        >
-                          <Eye size={18} />
-                        </button>
-                        <button
                           className="btn-icon edit"
                           onClick={() => openEditModal(student)}
                           title="Edit"
@@ -283,14 +318,6 @@ const StudentList = () => {
                   </div>
                   <div className="card-actions">
                     <button
-                      className="btn-icon view"
-                      onClick={() => setViewingStudent(student)}
-                      title="View Details"
-                    >
-                      <Eye size={18} />
-                      <span>View</span>
-                    </button>
-                    <button
                       className="btn-icon edit"
                       onClick={() => openEditModal(student)}
                       title="Edit"
@@ -316,130 +343,7 @@ const StudentList = () => {
           </>
         )}
 
-        {/* Detail View Modal */}
-        {viewingStudent && (
-          <div
-            className="modal-overlay"
-            onClick={() => setViewingStudent(null)}
-          >
-            <div className="modal-content detail-modal" onClick={(e) => e.stopPropagation()}>
-              <div className="modal-header">
-                <h2>Student Details</h2>
-                <button
-                  className="close-btn"
-                  onClick={() => setViewingStudent(null)}
-                >
-                  <X size={24} />
-                </button>
-              </div>
 
-              <div className="detail-content">
-                {/* Personal Information */}
-                <div className="detail-section">
-                  <h3 className="section-title">Personal Information</h3>
-                  <div className="detail-grid">
-                    <div className="detail-item">
-                      <span className="detail-label">ID Number:</span>
-                      <span className="detail-value">{viewingStudent.id_number}</span>
-                    </div>
-                    <div className="detail-item">
-                      <span className="detail-label">First Name:</span>
-                      <span className="detail-value">{viewingStudent.first_name}</span>
-                    </div>
-                    <div className="detail-item">
-                      <span className="detail-label">Father Name:</span>
-                      <span className="detail-value">{viewingStudent.father_name}</span>
-                    </div>
-                    <div className="detail-item">
-                      <span className="detail-label">Grandfather Name:</span>
-                      <span className="detail-value">{viewingStudent.grand_father_name}</span>
-                    </div>
-                    {viewingStudent.christian_name && (
-                      <div className="detail-item">
-                        <span className="detail-label">Christian Name:</span>
-                        <span className="detail-value">{viewingStudent.christian_name}</span>
-                      </div>
-                    )}
-                    <div className="detail-item">
-                      <span className="detail-label">Gender:</span>
-                      <span className="detail-value">{viewingStudent.gender}</span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Contact Information */}
-                <div className="detail-section">
-                  <h3 className="section-title">Contact Information</h3>
-                  <div className="detail-grid">
-                    <div className="detail-item">
-                      <span className="detail-label">Email:</span>
-                      <span className="detail-value">{viewingStudent.email}</span>
-                    </div>
-                    <div className="detail-item">
-                      <span className="detail-label">Phone:</span>
-                      <span className="detail-value">+251 {viewingStudent.phone_number}</span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Academic Information */}
-                <div className="detail-section">
-                  <h3 className="section-title">Academic Information</h3>
-                  <div className="detail-grid">
-                    <div className="detail-item">
-                      <span className="detail-label">Department:</span>
-                      <span className="detail-value">{viewingStudent.department || '-'}</span>
-                    </div>
-                    <div className="detail-item">
-                      <span className="detail-label">Year:</span>
-                      <span className="detail-value">{viewingStudent.year || '-'}</span>
-                    </div>
-                    <div className="detail-item">
-                      <span className="detail-label">Status:</span>
-                      <span className={`status-badge ${viewingStudent.is_verified ? 'verified' : 'pending'}`}>
-                        {viewingStudent.is_verified ? 'Verified' : 'Pending Verification'}
-                      </span>
-                    </div>
-                    <div className="detail-item">
-                      <span className="detail-label">Graduated:</span>
-                      <span className="detail-value">{viewingStudent.is_graduated ? 'Yes' : 'No'}</span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Housing Information */}
-                <div className="detail-section">
-                  <h3 className="section-title">Housing Information</h3>
-                  <div className="detail-grid">
-                    <div className="detail-item">
-                      <span className="detail-label">Dorm Block:</span>
-                      <span className="detail-value">{viewingStudent.dorm_block ? `Block ${viewingStudent.dorm_block}` : '-'}</span>
-                    </div>
-                    <div className="detail-item">
-                      <span className="detail-label">Room Number:</span>
-                      <span className="detail-value">{viewingStudent.room_number || '-'}</span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Timestamps */}
-                <div className="detail-section">
-                  <h3 className="section-title">Account Information</h3>
-                  <div className="detail-grid">
-                    <div className="detail-item">
-                      <span className="detail-label">Created:</span>
-                      <span className="detail-value">{new Date(viewingStudent.created_at).toLocaleDateString()}</span>
-                    </div>
-                    <div className="detail-item">
-                      <span className="detail-label">Last Updated:</span>
-                      <span className="detail-value">{new Date(viewingStudent.updated_at).toLocaleDateString()}</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
 
         {/* Edit Modal */}
         {editingStudent && (
@@ -468,29 +372,194 @@ const StudentList = () => {
               </div>
 
               <form onSubmit={submitUpdate} className="edit-form">
-                <div className="form-grid">
-                  <div className="form-group">
-                    <label>Department</label>
-                    <input
-                      name="department"
-                      value={editForm.department}
-                      onChange={handleEditChange}
-                      placeholder="e.g. Software Engineering"
-                      required
-                    />
+                {/* Personal Information */}
+                <div className="form-section">
+                  <h3 className="section-title">Personal Information</h3>
+                  <div className="form-grid">
+                    <div className="form-group">
+                      <label>First Name *</label>
+                      <input
+                        name="first_name"
+                        value={editForm.first_name}
+                        onChange={handleEditChange}
+                        required
+                      />
+                    </div>
+                    <div className="form-group">
+                      <label>Father Name *</label>
+                      <input
+                        name="father_name"
+                        value={editForm.father_name}
+                        onChange={handleEditChange}
+                        required
+                      />
+                    </div>
+                    <div className="form-group">
+                      <label>Grandfather Name *</label>
+                      <input
+                        name="grand_father_name"
+                        value={editForm.grand_father_name}
+                        onChange={handleEditChange}
+                        required
+                      />
+                    </div>
+                    <div className="form-group">
+                      <label>Christian Name</label>
+                      <input
+                        name="christian_name"
+                        value={editForm.christian_name}
+                        onChange={handleEditChange}
+                      />
+                    </div>
+                    <div className="form-group">
+                      <label>Gender *</label>
+                      <select
+                        name="gender"
+                        value={editForm.gender}
+                        onChange={handleEditChange}
+                        required
+                      >
+                        <option value="">Select Gender</option>
+                        <option value="Male">Male</option>
+                        <option value="Female">Female</option>
+                      </select>
+                    </div>
+                    <div className="form-group">
+                      <label>ID Number *</label>
+                      <input
+                        name="id_number"
+                        value={editForm.id_number}
+                        onChange={handleEditChange}
+                        required
+                      />
+                    </div>
                   </div>
-                  <div className="form-group">
-                    <label>Year</label>
-                    <input
-                      name="year"
-                      type="number"
-                      value={editForm.year}
-                      onChange={handleEditChange}
-                      placeholder="e.g. 4"
-                      required
-                      min="1"
-                      max="7"
-                    />
+                </div>
+
+                {/* Contact Information */}
+                <div className="form-section">
+                  <h3 className="section-title">Contact Information</h3>
+                  <div className="form-grid">
+                    <div className="form-group">
+                      <label>Email *</label>
+                      <input
+                        type="email"
+                        name="email"
+                        value={editForm.email}
+                        onChange={handleEditChange}
+                        required
+                      />
+                    </div>
+                    <div className="form-group">
+                      <label>Phone Number *</label>
+                      <input
+                        type="tel"
+                        name="phone_number"
+                        value={editForm.phone_number}
+                        onChange={handleEditChange}
+                        placeholder="9xxxxxxxx"
+                        required
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Academic Information */}
+                <div className="form-section">
+                  <h3 className="section-title">Academic Information</h3>
+                  <div className="form-grid">
+                    <div className="form-group">
+                      <label>Department *</label>
+                      <input
+                        name="department"
+                        value={editForm.department}
+                        onChange={handleEditChange}
+                        placeholder="e.g. Software Engineering"
+                        required
+                      />
+                    </div>
+                    <div className="form-group">
+                      <label>Year *</label>
+                      <input
+                        name="year"
+                        type="number"
+                        value={editForm.year}
+                        onChange={handleEditChange}
+                        placeholder="e.g. 4"
+                        required
+                        min="1"
+                        max="7"
+                      />
+                    </div>
+                    <div className="form-group">
+                      <label>Role *</label>
+                      <select
+                        name="role"
+                        value={editForm.role}
+                        onChange={handleEditChange}
+                        required
+                      >
+                        <option value="">Select Role</option>
+                        <option value="student">Student</option>
+                        <option value="admin">Admin</option>
+                      </select>
+                    </div>
+                    <div className="form-group checkbox-group">
+                      <label className="checkbox-label">
+                        <input
+                          type="checkbox"
+                          name="is_verified"
+                          checked={editForm.is_verified}
+                          onChange={(e) => setEditForm({ ...editForm, is_verified: e.target.checked })}
+                        />
+                        <span>Verified Student</span>
+                      </label>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Housing Information */}
+                <div className="form-section">
+                  <h3 className="section-title">Housing Information</h3>
+                  <div className="form-grid">
+                    <div className="form-group">
+                      <label>Dorm Block</label>
+                      <input
+                        name="dorm_block"
+                        value={editForm.dorm_block}
+                        onChange={handleEditChange}
+                        placeholder="e.g. A, B, C"
+                      />
+                    </div>
+                    <div className="form-group">
+                      <label>Room Number</label>
+                      <input
+                        name="room_number"
+                        value={editForm.room_number}
+                        onChange={handleEditChange}
+                        placeholder="e.g. 101"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Account Security */}
+                <div className="form-section">
+                  <h3 className="section-title">Account Security</h3>
+                  <div className="form-grid">
+                    <div className="form-group">
+                      <label>New Password</label>
+                      <input
+                        type="password"
+                        name="password"
+                        value={editForm.password}
+                        onChange={handleEditChange}
+                        placeholder="Leave empty to keep current password"
+                      />
+                      <small style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>
+                        Only fill this if you want to change the password
+                      </small>
+                    </div>
                   </div>
                 </div>
 

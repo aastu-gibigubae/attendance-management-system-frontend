@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useMyProfile, useUpdateMyProfile } from '../../hooks/useStudentProfile';
 import LoadingPage from '../../Components/LoadingPage';
 import ErrorPage from '../../Components/ErrorPage';
-import { Calendar, Save } from 'lucide-react';
+import { Save } from 'lucide-react';
 import '../../styles/Settings.css';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
@@ -12,22 +12,77 @@ const Settings = () => {
   const { data, isLoading, error, isError, refetch } = useMyProfile();
   const updateMutation = useUpdateMyProfile();
   
-  const [selectedYear, setSelectedYear] = useState(null);
+  const [formData, setFormData] = useState({
+    first_name: "",
+    father_name: "",
+    grand_father_name: "",
+    christian_name: "",
+    id_number: "",
+    email: "",
+    password: "",
+    gender: "",
+    phone_number: "",
+    department: "",
+    year: "",
+    dorm_block: "",
+    room_number: "",
+  });
   const [showSuccess, setShowSuccess] = useState(false);
+  const [isInitialized, setIsInitialized] = useState(false);
 
-  // Initialize selectedYear when data loads
-  // The /student/courses endpoint returns { student: {...}, courses: {...} }
-  if (data && selectedYear === null) {
-    setSelectedYear(data?.student?.year || 1);
+  // Initialize form data when student data loads
+  if (data && !isInitialized) {
+    const student = data?.student;
+    setFormData({
+      first_name: student?.first_name || "",
+      father_name: student?.father_name || "",
+      grand_father_name: student?.grand_father_name || "",
+      christian_name: student?.christian_name || "",
+      id_number: student?.id_number || "",
+      email: student?.email || "",
+      password: "",
+      gender: student?.gender || "",
+      phone_number: student?.phone_number || "",
+      department: student?.department || "",
+      year: student?.year || "",
+      dorm_block: student?.dorm_block || "",
+      room_number: student?.room_number || "",
+    });
+    setIsInitialized(true);
   }
 
   const handleBack = () => {
     return navigate('/student/courses')
   }
 
-  const handleSave = async () => {
+  const handleChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const handleSave = async (e) => {
+    e.preventDefault();
     try {
-      await updateMutation.mutateAsync({ year: selectedYear });
+      const payload = {
+        first_name: formData.first_name,
+        father_name: formData.father_name,
+        grand_father_name: formData.grand_father_name,
+        christian_name: formData.christian_name,
+        id_number: formData.id_number,
+        email: formData.email,
+        gender: formData.gender,
+        phone_number: formData.phone_number,
+        department: formData.department,
+        year: parseInt(formData.year, 10),
+        dorm_block: formData.dorm_block,
+        room_number: formData.room_number,
+      };
+
+      // Only include password if it's been filled in
+      if (formData.password && formData.password.trim() !== "") {
+        payload.password = formData.password;
+      }
+
+      await updateMutation.mutateAsync(payload);
       setShowSuccess(true);
       setTimeout(() => setShowSuccess(false), 3000);
     } catch (err) {
@@ -45,7 +100,21 @@ const Settings = () => {
   );
 
   const student = data?.student;
-  const hasChanges = selectedYear !== student?.year;
+  const hasChanges = JSON.stringify(formData) !== JSON.stringify({
+    first_name: student?.first_name || "",
+    father_name: student?.father_name || "",
+    grand_father_name: student?.grand_father_name || "",
+    christian_name: student?.christian_name || "",
+    id_number: student?.id_number || "",
+    email: student?.email || "",
+    password: "",
+    gender: student?.gender || "",
+    phone_number: student?.phone_number || "",
+    department: student?.department || "",
+    year: student?.year || "",
+    dorm_block: student?.dorm_block || "",
+    room_number: student?.room_number || "",
+  });
 
   return (
     <div className="settings-page">
@@ -59,7 +128,7 @@ const Settings = () => {
               gap: '8px',
               background: 'transparent',
               border: 'none',
-              color: '#3b82f6',
+              color: '#d4a574',
               fontSize: '15px',
               fontWeight: '500',
               cursor: 'pointer',
@@ -72,35 +141,183 @@ const Settings = () => {
             onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
           >
             <ArrowLeft size={20} />
-            Back to Courses
+            Courses
           </button>
-          <h1>Settings</h1>
-          <p>Update your academic year</p>
+          <h1>Profile Settings</h1>
+          <p>Update your profile information</p>
         </div>
 
-        <div className="settings-card">
-          <div className="year-section">
-            <div className="year-label">
-              <Calendar size={20} />
-              <span>Academic Year</span>
+        <form onSubmit={handleSave} className="settings-card">
+          {/* Personal Information */}
+          <div className="settings-section">
+            <h3 className="section-title">Personal Information</h3>
+            <div className="settings-grid">
+              <div className="form-group">
+                <label>First Name *</label>
+                <input
+                  name="first_name"
+                  value={formData.first_name}
+                  onChange={handleChange}
+                  required
+                />
+              </div>
+              <div className="form-group">
+                <label>Father Name *</label>
+                <input
+                  name="father_name"
+                  value={formData.father_name}
+                  onChange={handleChange}
+                  required
+                />
+              </div>
+              <div className="form-group">
+                <label>Grandfather Name *</label>
+                <input
+                  name="grand_father_name"
+                  value={formData.grand_father_name}
+                  onChange={handleChange}
+                  required
+                />
+              </div>
+              <div className="form-group">
+                <label>Christian Name</label>
+                <input
+                  name="christian_name"
+                  value={formData.christian_name}
+                  onChange={handleChange}
+                />
+              </div>
+              <div className="form-group">
+                <label>Gender *</label>
+                <select
+                  name="gender"
+                  value={formData.gender}
+                  onChange={handleChange}
+                  required
+                >
+                  <option value="">Select Gender</option>
+                  <option value="Male">Male</option>
+                  <option value="Female">Female</option>
+                </select>
+              </div>
+              <div className="form-group">
+                <label>ID Number *</label>
+                <input
+                  name="id_number"
+                  value={formData.id_number}
+                  onChange={handleChange}
+                  required
+                />
+              </div>
             </div>
-            
-            <select
-              className="year-select"
-              value={selectedYear || ''}
-              onChange={(e) => setSelectedYear(parseInt(e.target.value))}
-            >
-              <option value={1}>Year 1</option>
-              <option value={2}>Year 2</option>
-              <option value={3}>Year 3</option>
-              <option value={4}>Year 4</option>
-              <option value={5}>Year 5</option>
-            </select>
+          </div>
+
+          {/* Contact Information */}
+          <div className="settings-section">
+            <h3 className="section-title">Contact Information</h3>
+            <div className="settings-grid">
+              <div className="form-group">
+                <label>Email *</label>
+                <input
+                  type="email"
+                  name="email"
+                  value={formData.email}
+                  onChange={handleChange}
+                  required
+                />
+              </div>
+              <div className="form-group">
+                <label>Phone Number *</label>
+                <input
+                  type="tel"
+                  name="phone_number"
+                  value={formData.phone_number}
+                  onChange={handleChange}
+                  placeholder="9xxxxxxxx"
+                  required
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Academic Information */}
+          <div className="settings-section">
+            <h3 className="section-title">Academic Information</h3>
+            <div className="settings-grid">
+              <div className="form-group">
+                <label>Department *</label>
+                <input
+                  name="department"
+                  value={formData.department}
+                  onChange={handleChange}
+                  placeholder="e.g. Software Engineering"
+                  required
+                />
+              </div>
+              <div className="form-group">
+                <label>Year *</label>
+                <input
+                  name="year"
+                  type="number"
+                  value={formData.year}
+                  onChange={handleChange}
+                  placeholder="e.g. 4"
+                  required
+                  min="1"
+                  max="7"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Housing Information */}
+          <div className="settings-section">
+            <h3 className="section-title">Housing Information</h3>
+            <div className="settings-grid">
+              <div className="form-group">
+                <label>Dorm Block</label>
+                <input
+                  name="dorm_block"
+                  value={formData.dorm_block}
+                  onChange={handleChange}
+                  placeholder="e.g. A, B, C"
+                />
+              </div>
+              <div className="form-group">
+                <label>Room Number</label>
+                <input
+                  name="room_number"
+                  value={formData.room_number}
+                  onChange={handleChange}
+                  placeholder="e.g. 101"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Account Security */}
+          <div className="settings-section">
+            <h3 className="section-title">Account Security</h3>
+            <div className="settings-grid">
+              <div className="form-group">
+                <label>New Password</label>
+                <input
+                  type="password"
+                  name="password"
+                  value={formData.password}
+                  onChange={handleChange}
+                  placeholder="Leave empty to keep current password"
+                />
+                <small style={{ color: '#666', fontSize: '12px', marginTop: '4px', display: 'block' }}>
+                  Only fill this if you want to change your password
+                </small>
+              </div>
+            </div>
           </div>
 
           <button
+            type="submit"
             className={`save-btn ${updateMutation.isPending ? 'loading' : ''} ${!hasChanges ? 'disabled' : ''}`}
-            onClick={handleSave}
             disabled={updateMutation.isPending || !hasChanges}
           >
             <Save size={18} />
@@ -110,17 +327,17 @@ const Settings = () => {
           {/* Success Message */}
           {showSuccess && (
             <div className="success-message">
-              ✓ Year updated successfully!
+              ✓ Profile updated successfully!
             </div>
           )}
 
           {/* Error Message */}
           {updateMutation.isError && (
             <div className="error-message">
-              ✗ {updateMutation.error?.response?.data?.message || 'Failed to update year'}
+              ✗ {updateMutation.error?.response?.data?.message || 'Failed to update profile'}
             </div>
           )}
-        </div>
+        </form>
       </div>
     </div>
   );
