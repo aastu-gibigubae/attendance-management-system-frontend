@@ -165,7 +165,7 @@
 /* The 'Upload File' Button inside the input */
 .file-input::file-selector-button {
   background-color: #ffffff;
-  color: '#d4a574'; /* Golden text */
+  color: #d4a574; /* Golden text */
   border: 1px solid #e2e8f0; /* Subtle border */
   border-radius: 6px;
   padding: 6px 16px;

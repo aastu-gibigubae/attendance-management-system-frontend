@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useMyProfile, useUpdateMyProfile } from '../../hooks/useStudentProfile';
 import LoadingPage from '../../Components/LoadingPage';
 import ErrorPage from '../../Components/ErrorPage';
@@ -28,28 +28,28 @@ const Settings = () => {
     room_number: "",
   });
   const [showSuccess, setShowSuccess] = useState(false);
-  const [isInitialized, setIsInitialized] = useState(false);
 
   // Initialize form data when student data loads
-  if (data && !isInitialized) {
-    const student = data?.student;
-    setFormData({
-      first_name: student?.first_name || "",
-      father_name: student?.father_name || "",
-      grand_father_name: student?.grand_father_name || "",
-      christian_name: student?.christian_name || "",
-      id_number: student?.id_number || "",
-      email: student?.email || "",
-      password: "",
-      gender: student?.gender || "",
-      phone_number: student?.phone_number || "",
-      department: student?.department || "",
-      year: student?.year || "",
-      dorm_block: student?.dorm_block || "",
-      room_number: student?.room_number || "",
-    });
-    setIsInitialized(true);
-  }
+  useEffect(() => {
+    if (data?.data) {
+      const student = data?.data;
+      setFormData({
+        first_name: student.first_name || "",
+        father_name: student.father_name || "",
+        grand_father_name: student.grand_father_name || "",
+        christian_name: student.christian_name || "",
+        id_number: student.id_number || "",
+        email: student.email || "",
+        password: "",
+        gender: student.gender || "",
+        phone_number: student.phone_number || "",
+        department: student.department || "",
+        year: student.year?.toString() || "",
+        dorm_block: student.dorm_block || "",
+        room_number: student.room_number || "",
+      });
+    }
+  }, [data]);
 
   const handleBack = () => {
     return navigate('/student/courses')
@@ -66,15 +66,16 @@ const Settings = () => {
         first_name: formData.first_name,
         father_name: formData.father_name,
         grand_father_name: formData.grand_father_name,
-        christian_name: formData.christian_name,
+        christian_name: formData.christian_name || null,
+        confessionFatherId: null,
         id_number: formData.id_number,
         email: formData.email,
         gender: formData.gender,
         phone_number: formData.phone_number,
         department: formData.department,
         year: parseInt(formData.year, 10),
-        dorm_block: formData.dorm_block,
-        room_number: formData.room_number,
+        dorm_block: formData.dorm_block || null,
+        room_number: formData.room_number || null,
       };
 
       // Only include password if it's been filled in
@@ -100,21 +101,23 @@ const Settings = () => {
   );
 
   const student = data?.student;
-  const hasChanges = JSON.stringify(formData) !== JSON.stringify({
-    first_name: student?.first_name || "",
-    father_name: student?.father_name || "",
-    grand_father_name: student?.grand_father_name || "",
-    christian_name: student?.christian_name || "",
-    id_number: student?.id_number || "",
-    email: student?.email || "",
-    password: "",
-    gender: student?.gender || "",
-    phone_number: student?.phone_number || "",
-    department: student?.department || "",
-    year: student?.year || "",
-    dorm_block: student?.dorm_block || "",
-    room_number: student?.room_number || "",
-  });
+  
+  // Check if form has changes from original data
+  const hasChanges = data?.student && (
+    formData.first_name !== (student.first_name || "") ||
+    formData.father_name !== (student.father_name || "") ||
+    formData.grand_father_name !== (student.grand_father_name || "") ||
+    formData.christian_name !== (student.christian_name || "") ||
+    formData.id_number !== (student.id_number || "") ||
+    formData.email !== (student.email || "") ||
+    formData.gender !== (student.gender || "") ||
+    formData.phone_number !== (student.phone_number || "") ||
+    formData.department !== (student.department || "") ||
+    formData.year?.toString() !== (student.year?.toString() || "") ||
+    formData.dorm_block !== (student.dorm_block || "") ||
+    formData.room_number !== (student.room_number || "") ||
+    (formData.password && formData.password.trim() !== "")
+  );
 
   return (
     <div className="settings-page">
@@ -196,8 +199,8 @@ const Settings = () => {
                   required
                 >
                   <option value="">Select Gender</option>
-                  <option value="Male">Male</option>
-                  <option value="Female">Female</option>
+                  <option value="male">Male</option>
+                  <option value="female">Female</option>
                 </select>
               </div>
               <div className="form-group">

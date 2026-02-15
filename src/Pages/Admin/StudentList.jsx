@@ -146,16 +146,18 @@ const StudentList = () => {
       first_name: editForm.first_name,
       father_name: editForm.father_name,
       grand_father_name: editForm.grand_father_name,
-      christian_name: editForm.christian_name,
+      christian_name: editForm.christian_name || null,
+      confessionFatherId: null,
       id_number: editForm.id_number,
       email: editForm.email,
       gender: editForm.gender,
       phone_number: editForm.phone_number,
       department: editForm.department,
       year: parseInt(editForm.year, 10),
-      dorm_block: editForm.dorm_block,
-      room_number: editForm.room_number,
+      dorm_block: editForm.dorm_block || null,
+      room_number: editForm.room_number || null,
       is_verified: editForm.is_verified,
+      is_graduated: false, // Default to false, add checkbox if needed
       role: editForm.role,
     };
 
@@ -177,11 +179,17 @@ const StudentList = () => {
             showConfirmButton: false,
           });
         },
-        onError: () => {
+        onError: (error) => {
+          console.error('Delete failed:', error);
+          console.error('Error details:', {
+            message: error?.response?.data?.message,
+            status: error?.response?.status,
+            data: error?.response?.data
+          });
           Swal.fire({
+            title: "Error!",
+            text: error?.response?.data?.message || "Failed to update student.",
             icon: "error",
-            title: "Error",
-            text: "Failed to update student",
           });
         },
       }
@@ -420,8 +428,8 @@ const StudentList = () => {
                         required
                       >
                         <option value="">Select Gender</option>
-                        <option value="Male">Male</option>
-                        <option value="Female">Female</option>
+                        <option value="male">Male</option>
+                        <option value="female">Female</option>
                       </select>
                     </div>
                     <div className="form-group">

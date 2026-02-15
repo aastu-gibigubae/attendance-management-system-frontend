@@ -270,7 +270,7 @@
 
 .btn-save {
   padding: 8px 16px;
-  background: #4f46e5;
+  background: #d4a574;
   color: white;
   border: none;
   border-radius: 6px;
@@ -278,10 +278,19 @@
   align-items: center;
   gap: 8px;
   cursor: pointer;
+  transition: all 0.2s ease;
 }
 
-.btn-save:hover {
-  background: #4338ca;
+.btn-save:hover:not(:disabled) {
+  background: #c9935a;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(212, 165, 116, 0.3);
+}
+
+.btn-save:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
 }
 
 /* Form Sections */
