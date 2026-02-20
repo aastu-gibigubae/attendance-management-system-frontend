@@ -65,6 +65,26 @@ export const studentService = {
     const response = await apiClient.put('/student/update/me', data);
     return response.data;
   },
+
+  /**
+   * Get current student's full profile from /student/me
+   * @returns {Promise} Response with full student data
+   */
+  getMe: async () => {
+    const response = await apiClient.get('/student/me');
+    return response.data;
+  },
+
+  /**
+   * Update current student's full profile
+   * @param {Object} data - Updated student fields
+   * @returns {Promise} Response with updated student
+   */
+  updateMe: async (data) => {
+    const response = await apiClient.put('/student/update/me', data);
+    return response.data;
+  },
+
 };
 
 export default studentService;

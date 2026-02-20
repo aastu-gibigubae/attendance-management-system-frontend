@@ -147,3 +147,22 @@ export const useMarkAttendanceStudent = () => {
     },
   });
 };
+
+/**
+ * Hook to delete an attendance session
+ * @returns {Object} Mutation object
+ */
+export const useDeleteAttendance = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ attendanceId }) => attendanceService.deleteAttendance(attendanceId),
+    onSuccess: () => {
+      // Invalidate all attendance queries so fresh data is fetched
+      queryClient.invalidateQueries({ queryKey: attendanceKeys.all });
+    },
+    onError: (err) => {
+      console.error('Failed to delete attendance', err);
+    },
+  });
+};

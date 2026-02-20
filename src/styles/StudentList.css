@@ -287,8 +287,12 @@
   box-shadow: 0 2px 8px rgba(212, 165, 116, 0.3);
 }
 
+.btn-save:active {
+  transform: translateY(0);
+}
+
 .btn-save:disabled {
-  opacity: 0.6;
+  background-color: #e5d4c1;
   cursor: not-allowed;
   transform: none;
 }

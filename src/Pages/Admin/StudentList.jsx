@@ -579,8 +579,13 @@ const StudentList = () => {
                   >
                     Cancel
                   </button>
-                  <button type="submit" className="btn-save">
-                    <Save size={18} /> Save Changes
+                  <button 
+                    type="submit" 
+                    className="btn-save"
+                    disabled={updateStudentMutation.isPending}
+                  >
+                    <Save size={18} />
+                    {updateStudentMutation.isPending ? 'Saving...' : 'Save Changes'}
                   </button>
                 </div>
               </form>

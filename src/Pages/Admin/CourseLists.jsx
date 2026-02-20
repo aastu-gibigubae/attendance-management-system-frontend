@@ -9,6 +9,7 @@ import CourseCard from "../../Components/CourseCard";
 import Swal from "sweetalert2";
 import LoadingPage from "../../Components/LoadingPage";
 import ErrorPage from "../../Components/ErrorPage";
+import enrollmentService from "../../api/services/enrollmentService";
 import "../../styles/CourseList.css";
 
 const CourseLists = () => {
@@ -33,6 +34,8 @@ const CourseLists = () => {
     end_date: "",
     enrollment_start_date: "",
     enrollment_deadline: "",
+    year_level: "",
+    semester: "",
   });
 
   // Transform API data to component format
@@ -86,6 +89,8 @@ const CourseLists = () => {
       end_date: toDateTimeLocal(course.end_date),
       enrollment_start_date: toDateTimeLocal(course.enrollment_start_date),
       enrollment_deadline: toDateTimeLocal(course.enrollment_deadline),
+      year_level: course.year_level || "",
+      semester: course.semester || "",
     });
   };
 
@@ -136,21 +141,116 @@ const CourseLists = () => {
   };
 
   const submitEdit = async () => {
-    updateCourseMutation.mutate(
-      { id: editingCourse, data: editForm },
-      {
-        onSuccess: () => {
-          setEditingCourse(null);
-        },
-        onError: () => {
-          Swal.fire({
-            icon: "error",
-            title: "Update Failed",
-            text: "Failed to update course",
-          });
-        },
-      },
-    );
+    // Find the original course to compare year_level
+    const originalCourse = courses.find((c) => c.id === editingCourse);
+    const yearLevelChanged =
+      originalCourse &&
+      parseInt(editForm.year_level) !== parseInt(originalCourse.year_level);
+
+    // If year_level changed, check how many students will be unenrolled first
+    if (yearLevelChanged) {
+      let toUnenroll = [];
+      try {
+        const enrolledData = await enrollmentService.getEnrolledStudents(editingCourse);
+        const enrolledStudents = enrolledData?.students || [];
+        const newYearLevel = parseInt(editForm.year_level);
+        toUnenroll = enrolledStudents.filter((s) => s.year !== newYearLevel);
+      } catch (err) {
+        console.error("Failed to fetch enrolled students:", err);
+      }
+
+      // Show confirmation alert with the count
+      const confirmResult = await Swal.fire({
+        icon: "warning",
+        title: "Year Level Changed",
+        html:
+          toUnenroll.length > 0
+            ? `<b>${toUnenroll.length} student(s)</b> will be unenrolled because their year level doesn't match the new year level.`
+            : `No enrolled students are affected by this year level change.`,
+        showCancelButton: true,
+        confirmButtonText: "Yes, save changes",
+        cancelButtonText: "Cancel",
+        confirmButtonColor: "#e92b2bff",
+        cancelButtonColor: "#1960edff",
+      });
+
+      if (!confirmResult.isConfirmed) return;
+
+      // Proceed with update + unenroll
+      updateCourseMutation.mutate(
+        { id: editingCourse, data: editForm },
+        {
+          onSuccess: async () => {
+            setEditingCourse(null);
+            try {
+              if (toUnenroll.length > 0) {
+                await Promise.all(
+                  toUnenroll.map((s) =>
+                    enrollmentService.unenrollStudent({
+                      studentId: s.id,
+                      courseId: editingCourse,
+                    })
+                  )
+                );
+                Swal.fire({
+                  icon: "success",
+                  title: "Updated",
+                  html: `Course updated successfully.<br/><b>${toUnenroll.length} student(s)</b> were automatically unenrolled.`,
+                  timer: 4000,
+                  showConfirmButton: false,
+                });
+              } else {
+                Swal.fire({
+                  icon: "success",
+                  title: "Updated",
+                  text: "Course updated successfully.",
+                  timer: 2000,
+                  showConfirmButton: false,
+                });
+              }
+            } catch (err) {
+              console.error("Auto-unenroll error:", err);
+              Swal.fire({
+                icon: "warning",
+                title: "Partially Updated",
+                text: "Course updated, but failed to unenroll some students",
+              });
+            }
+          },
+          onError: () => {
+            Swal.fire({
+              icon: "error",
+              title: "Update Failed",
+              text: "Failed to update course",
+            });
+          },
+        }
+      );
+    } else {
+      // No year_level change — just save directly
+      updateCourseMutation.mutate(
+        { id: editingCourse, data: editForm },
+        {
+          onSuccess: () => {
+            setEditingCourse(null);
+            Swal.fire({
+              icon: "success",
+              title: "Updated",
+              text: "Course updated successfully.",
+              timer: 2000,
+              showConfirmButton: false,
+            });
+          },
+          onError: () => {
+            Swal.fire({
+              icon: "error",
+              title: "Update Failed",
+              text: "Failed to update course",
+            });
+          },
+        }
+      );
+    }
   };
 
   const toDateTimeLocal = (iso) => {
@@ -167,6 +267,8 @@ const CourseLists = () => {
       end_date: "",
       enrollment_start_date: "",
       enrollment_deadline: "",
+      year_level: "",
+      semester: "",
     });
   };
 
@@ -350,12 +452,53 @@ const CourseLists = () => {
               </div>
             </div>
 
+            <div className="modal-date-row">
+              <div className="modal-form-group">
+                <label className="modal-label">Year Level *</label>
+                <select
+                  className="modal-input"
+                  value={editForm.year_level}
+                  onChange={(e) =>
+                    setEditForm({ ...editForm, year_level: parseInt(e.target.value) || "" })
+                  }
+                  required
+                >
+                  <option value="">Select Year</option>
+                  <option value="1">Year 1</option>
+                  <option value="2">Year 2</option>
+                  <option value="3">Year 3</option>
+                  <option value="4">Year 4</option>
+                  <option value="5">Year 5</option>
+                </select>
+              </div>
+
+              <div className="modal-form-group">
+                <label className="modal-label">Semester *</label>
+                <select
+                  className="modal-input"
+                  value={editForm.semester}
+                  onChange={(e) =>
+                    setEditForm({ ...editForm, semester: parseInt(e.target.value) || "" })
+                  }
+                  required
+                >
+                  <option value="">Select Semester</option>
+                  <option value="1">Semester 1</option>
+                  <option value="2">Semester 2</option>
+                </select>
+              </div>
+            </div>
+
             <div className="modal-actions">
               <button className="btn-cancel" onClick={closeModal}>
                 Cancel
               </button>
-              <button className="btn-save" onClick={submitEdit}>
-                Save Changes
+              <button 
+                className="btn-save" 
+                onClick={submitEdit}
+                disabled={updateCourseMutation.isPending}
+              >
+                {updateCourseMutation.isPending ? 'Saving...' : 'Save Changes'}
               </button>
             </div>
           </div>

@@ -55,6 +55,16 @@ export const attendanceService = {
     const response = await apiClient.post('/attendance/mark/student', attendanceData);
     return response.data;
   },
+
+  /**
+   * Delete an attendance session
+   * @param {string|number} attendanceId - Attendance ID to delete
+   * @returns {Promise} Response confirming deletion
+   */
+  deleteAttendance: async (attendanceId) => {
+    const response = await apiClient.delete(`/attendance/${attendanceId}`);
+    return response.data;
+  },
 };
 
 export default attendanceService;
