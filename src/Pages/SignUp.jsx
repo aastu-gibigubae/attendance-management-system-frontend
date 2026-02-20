@@ -1,12 +1,14 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Eye, EyeOff } from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
 import { useSignup } from "../hooks/useAuth";
 import "./Auth.css";
 import ErrorPage from "../Components/ErrorPage";
 
 const SignUp = () => {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
   const [formData, setFormData] = useState({
     firstName: "",
@@ -33,15 +35,16 @@ const SignUp = () => {
   // Use React Query mutation hook for signup
   const { mutate: signup, isPending, error, isError } = useSignup({
     onSuccess: (data) => {
-      localStorage.setItem("userRole", data?.data?.role || "student");
+      const role = data?.data?.role || "student";
+      localStorage.setItem("userRole", role);
+      // Invalidate the auth query so PublicOnlyRoute / ProtectedRoute
+      // immediately sees the newly authenticated session
+      queryClient.invalidateQueries({ queryKey: ["auth", "me"] });
       navigate("/student/courses");
     },
-  }); 
+  });
 
-  // Clear any stale role when the signup page mounts
-  useEffect(() => {
-    localStorage.removeItem("userRole");
-  }, []);
+
 
   // Email validation function
   const validateEmail = (email) => {

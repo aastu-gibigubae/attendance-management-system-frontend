@@ -1,47 +1,45 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Eye, EyeOff } from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
 import { useLogin } from "../hooks/useAuth";
 import "./Auth.css";
 import ErrorPage from "../Components/ErrorPage";
 
 const Login = () => {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [searchParams] = useSearchParams();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
 
   // Check for redirect parameter (for QR code deep linking)
-  const redirectUrl = searchParams.get('redirect');
+  const redirectUrl = searchParams.get("redirect");
 
-  // Use React Query mutation hook for login
   const { mutate: login, isPending, error, isError } = useLogin({
     onSuccess: (data) => {
       const role = data.data?.role;
-      // Store role
-      localStorage.setItem("userRole", role);
 
-      // If there's a redirect URL (from QR code), go there
+      // Store role for components that still read from localStorage
+      if (role) localStorage.setItem("userRole", role);
+
+      // Invalidate the cached /student/me query so ProtectedRoute
+      // and PublicOnlyRoute immediately see the new authenticated session
+      queryClient.invalidateQueries({ queryKey: ["auth", "me"] });
+
+      // Navigate based on redirect param or role
       if (redirectUrl) {
         navigate(decodeURIComponent(redirectUrl));
+      } else if (role === "admin" || role === "super_admin") {
+        navigate("/admin/courses");
       } else {
-        // Otherwise, navigate based on role
-        if (role === "admin" || role === "super_admin") {
-          navigate("/admin/courses");
-        } else {
-          navigate("/student/courses");
-        }
+        navigate("/student/courses");
       }
     },
   });
- 
-  // Clear any stale role when the login page mounts
-  useEffect(() => {
-    localStorage.removeItem("userRole");
-  }, []);
 
-  const handleLogin = async (e) => {
+  const handleLogin = (e) => {
     e.preventDefault();
     login({ email, password });
   };
@@ -49,7 +47,7 @@ const Login = () => {
   return (
     <div className="auth-container">
       <div className="auth-content">
-        {/* Right Section - Welcome Card (moved to appear first) */}
+        {/* Right Section - Welcome Card */}
         <div className="auth-welcome-section">
           <div className="welcome-card">
             <div className="logo-circle">
@@ -67,7 +65,7 @@ const Login = () => {
           </div>
         </div>
 
-        {/* Left Section - Form (moved to appear after welcome) */}
+        {/* Left Section - Form */}
         <div className="auth-form-section">
           <div className="auth-form">
             <h1 className="auth-title">Login</h1>
@@ -92,7 +90,7 @@ const Login = () => {
                 />
               </div>
 
-              <div className="form-group" style={{ position: 'relative' }}>
+              <div className="form-group" style={{ position: "relative" }}>
                 <input
                   type={showPassword ? "text" : "password"}
                   placeholder="Password"
@@ -100,23 +98,23 @@ const Login = () => {
                   onChange={(e) => setPassword(e.target.value)}
                   required
                   className="form-input"
-                  style={{ paddingRight: '45px' }}
+                  style={{ paddingRight: "45px" }}
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
                   style={{
-                    position: 'absolute',
-                    right: '12px',
-                    top: '50%',
-                    transform: 'translateY(-50%)',
-                    background: 'none',
-                    border: 'none',
-                    cursor: 'pointer',
-                    color: '#9ca3af',
-                    padding: '4px',
-                    display: 'flex',
-                    alignItems: 'center'
+                    position: "absolute",
+                    right: "12px",
+                    top: "50%",
+                    transform: "translateY(-50%)",
+                    background: "none",
+                    border: "none",
+                    cursor: "pointer",
+                    color: "#9ca3af",
+                    padding: "4px",
+                    display: "flex",
+                    alignItems: "center",
                   }}
                 >
                   {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}

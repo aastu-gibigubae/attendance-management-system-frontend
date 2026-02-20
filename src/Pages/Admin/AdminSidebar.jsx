@@ -10,12 +10,14 @@ import {
   BarChart3,
   UserPlus,
 } from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
 import { useLogout } from "../../hooks/useAuth";
 import "../../styles/AdminSidebar.css";
 
 const AdminSidebar = ({ collapsed, setCollapsed }) => {
   const navigate = useNavigate();
   const location = useLocation();
+  const queryClient = useQueryClient();
   const [isMobileOrTablet, setIsMobileOrTablet] = useState(
     window.innerWidth < 1024
   );
@@ -23,11 +25,14 @@ const AdminSidebar = ({ collapsed, setCollapsed }) => {
   const logoutMutation = useLogout({
     onSuccess: () => {
       localStorage.removeItem("userRole");
+      // Set to null so AuthProvider instantly sees user=null — no refetch, no loop
+      queryClient.setQueryData(["auth", "me"], null);
       navigate("/");
     },
     onError: (error) => {
       console.error("Logout error:", error);
       localStorage.removeItem("userRole");
+      queryClient.setQueryData(["auth", "me"], null);
       navigate("/");
     },
   });

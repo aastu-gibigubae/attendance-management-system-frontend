@@ -1,19 +1,26 @@
 "use client"
 import { useNavigate } from "react-router-dom"
+import { useQueryClient } from "@tanstack/react-query"
 import { useLogout } from "../../hooks/useAuth"
 import "./StudentNavBar.css"
 
 const StudentNavBar = () => {
   const navigate = useNavigate()
+  const queryClient = useQueryClient()
 
   const logoutMutation = useLogout({
     onSuccess: () => {
       localStorage.removeItem("userRole")
+      // Set query data to null — AuthProvider immediately sees user=null and redirects.
+      // Do NOT use removeQueries here: removing triggers a refetch which hits GET /student/me
+      // with no cookies → 401 → interceptor tries refresh → also 401 → infinite reload loop.
+      queryClient.setQueryData(["auth", "me"], null)
       navigate("/")
     },
     onError: (error) => {
       console.error("Logout error:", error)
       localStorage.removeItem("userRole")
+      queryClient.setQueryData(["auth", "me"], null)
       navigate("/")
     },
   })
