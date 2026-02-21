@@ -299,11 +299,14 @@ const CourseDetails = () => {
         }),
         code: item.code,
         highlighted: item.status === "present",
-        // Server-computed expiresAt → convert to JS timestamp (ms)
-        expiresAt: item.meta?.expiresAt
-          ? new Date(item.meta.expiresAt).getTime()
+        // expiresAt derived from DB fields: date (start time) + minutes * 60s
+        // Both come from the server on every load → timer is always refresh-persistent
+        expiresAt: item.date && item.minutes != null
+          ? new Date(item.date).getTime() + Number(item.minutes) * 60_000
           : null,
-        isExpired: item.meta?.isExpired ?? false,
+        isExpired: item.date && item.minutes != null
+          ? Date.now() > new Date(item.date).getTime() + Number(item.minutes) * 60_000
+          : false,
       }))
     : [];
 
