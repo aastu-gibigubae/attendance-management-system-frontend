@@ -22,21 +22,41 @@ import LoadingPage from "../../Components/LoadingPage";
 import ErrorPage from "../../Components/ErrorPage";
 
 // =============================================================
+// Helpers
+// =============================================================
+
+/**
+ * Given an attendance record with `date` (start ISO string) and `minutes`,
+ * compute the JS timestamp when the session expires.
+ * This is always derivable from the server data → survives refresh & navigation.
+ */
+const computeExpiresAt = (date, minutes) => {
+  if (!date || minutes == null) return null;
+  return new Date(date).getTime() + Number(minutes) * 60_000;
+};
+
+// =============================================================
 // CountdownTimer
-// Receives a JS timestamp (ms). Ticks every second.
-// Always re-derives remaining time from Date.now() — perfect on refresh.
 // =============================================================
 const CountdownTimer = ({ expiresAt }) => {
-  const calc = () => Math.max(0, Math.floor((expiresAt - Date.now()) / 1000));
-  const [remaining, setRemaining] = useState(calc);
-  const intervalRef = useRef(null);
+  const [remaining, setRemaining] = useState(() =>
+    Math.max(0, Math.floor((expiresAt - Date.now()) / 1000))
+  );
+  const calledRef = useRef(false);
 
   useEffect(() => {
     if (!expiresAt) return;
-    setRemaining(calc());
-    intervalRef.current = setInterval(() => setRemaining(calc()), 1000);
-    return () => clearInterval(intervalRef.current);
-  }, [expiresAt]); // eslint-disable-line react-hooks/exhaustive-deps
+    calledRef.current = false;
+
+    const tick = () => {
+      const diff = Math.max(0, Math.floor((expiresAt - Date.now()) / 1000));
+      setRemaining(diff);
+    };
+
+    tick();
+    const id = setInterval(tick, 1000);
+    return () => clearInterval(id);
+  }, [expiresAt]);
 
   if (!expiresAt) return null;
 
@@ -87,7 +107,7 @@ const CountdownTimer = ({ expiresAt }) => {
 };
 
 // =============================================================
-// CreateAttendanceDialog
+// Create Attendance Dialog
 // =============================================================
 const CreateAttendanceDialog = ({ isOpen, onClose, onConfirm, isPending }) => {
   const [minutes, setMinutes] = useState(15);
@@ -124,10 +144,19 @@ const CreateAttendanceDialog = ({ isOpen, onClose, onConfirm, isPending }) => {
           boxShadow: "0 20px 60px rgba(0,0,0,0.2)",
         }}
       >
-        <h2 style={{ margin: "0 0 6px", fontSize: "18px", fontWeight: "700", color: "#111" }}>
+        <h2
+          style={{
+            margin: "0 0 6px",
+            fontSize: "18px",
+            fontWeight: "700",
+            color: "#111",
+          }}
+        >
           Create Attendance Session
         </h2>
-        <p style={{ margin: "0 0 24px", fontSize: "13px", color: "#6b7280" }}>
+        <p
+          style={{ margin: "0 0 24px", fontSize: "13px", color: "#6b7280" }}
+        >
           Set how long students have to submit their attendance code.
         </p>
 
@@ -141,7 +170,10 @@ const CreateAttendanceDialog = ({ isOpen, onClose, onConfirm, isPending }) => {
               marginBottom: "8px",
             }}
           >
-            <Timer size={14} style={{ verticalAlign: "middle", marginRight: "6px" }} />
+            <Timer
+              size={14}
+              style={{ verticalAlign: "middle", marginRight: "6px" }}
+            />
             Duration (minutes)
           </label>
           <input
@@ -169,7 +201,14 @@ const CreateAttendanceDialog = ({ isOpen, onClose, onConfirm, isPending }) => {
           />
 
           {/* Quick-select chips */}
-          <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", marginBottom: "24px" }}>
+          <div
+            style={{
+              display: "flex",
+              gap: "8px",
+              flexWrap: "wrap",
+              marginBottom: "24px",
+            }}
+          >
             {[5, 10, 15, 30, 60].map((opt) => (
               <button
                 key={opt}
@@ -263,7 +302,7 @@ const CourseDetails = () => {
   const isLoading = courseLoading || studentsLoading || attendanceLoading;
   const error = courseError || attendanceError;
 
-  // ---- Transform course ----
+  // Transform course
   const course = courseData?.success
     ? {
         id: courseData.data.id,
@@ -278,20 +317,15 @@ const CourseDetails = () => {
   const totalStudents = studentsData?.success ? studentsData.totalStudents : 0;
 
   /**
-   * Transform attendance records from GET /attendance/course/:id
-   *
-   * The backend returns each record with a `meta` object:
-   *   meta: { startTime, expiresAt, isExpired, status }
-   *
-   * `expiresAt` is computed server-side as  date + minutes * 60 000 ms
-   * so it is ALWAYS correct on every page load / refresh / navigation.
-   * We never store this in local state — it is always derived from the API.
+   * Transform attendance records.
+   * `expiresAt` is always computed from `item.date + item.minutes` so it
+   * survives page refresh, navigation, and any other re-render.
    */
   const attendance = attendanceData?.success
     ? attendanceData.data.map((item) => ({
         id: item.id,
-        date: item.date,
-        minutes: item.minutes,
+        date: item.date,            // raw ISO — session start time
+        minutes: item.minutes,      // duration stored in DB
         displayDate: new Date(item.date).toLocaleDateString(),
         displayTime: new Date(item.date).toLocaleTimeString([], {
           hour: "2-digit",
@@ -299,18 +333,14 @@ const CourseDetails = () => {
         }),
         code: item.code,
         highlighted: item.status === "present",
-        // Server-computed expiresAt → convert to JS timestamp (ms)
-        expiresAt: item.meta?.expiresAt
-          ? new Date(item.meta.expiresAt).getTime()
-          : null,
-        isExpired: item.meta?.isExpired ?? false,
+        // Always-derivable expiry — persistent across refresh/navigation
+        expiresAt: computeExpiresAt(item.date, item.minutes),
       }))
     : [];
 
   // Most-recent session first
   const reversedAttendance = [...attendance].reverse();
 
-  // ---- Create handler ----
   const handleConfirmCreate = (minutes) => {
     createAttendanceMutation.mutate(
       { courseId, minutes },
@@ -318,15 +348,13 @@ const CourseDetails = () => {
         onSuccess: (data) => {
           setShowCreateDialog(false);
 
-          // POST response: data.data.expiresAt  (flat, as per current backend)
-          const serverExpiresAt = data?.data?.expiresAt
-            ? new Date(data.data.expiresAt)
-            : null;
-          const startTime = data?.data?.attendance?.date
-            ? new Date(data.data.attendance.date)
-            : new Date();
-          const durationMins = serverExpiresAt
-            ? Math.round((serverExpiresAt - startTime) / 60_000)
+          // Compute duration from server timestamps for the success message
+          const expiryData = data?.data?.expiryData;
+          const durationMins = expiryData?.attendanceTime && expiryData?.expiresAt
+            ? Math.round(
+                (new Date(expiryData.expiresAt) - new Date(expiryData.attendanceTime)) /
+                  60_000
+              )
             : minutes;
 
           setSuccessMessage(
@@ -370,7 +398,10 @@ const CourseDetails = () => {
       <div className="course-details-container">
         {/* Header */}
         <div className="details-header">
-          <button className="back-button" onClick={() => navigate("/admin/courses")}>
+          <button
+            className="back-button"
+            onClick={() => navigate("/admin/courses")}
+          >
             <ChevronLeft size={20} />
             Back
           </button>
@@ -426,7 +457,9 @@ const CourseDetails = () => {
                 </div>
                 <div className="info-content">
                   <p className="info-label">Duration</p>
-                  <p className="info-value">{course.startDate} to {course.endDate}</p>
+                  <p className="info-value">
+                    {course.startDate} to {course.endDate}
+                  </p>
                 </div>
               </div>
 
@@ -446,12 +479,14 @@ const CourseDetails = () => {
                 </div>
                 <div className="info-content">
                   <p className="info-label">Sessions</p>
-                  <p className="info-value">{attendance.length} Scheduled</p>
+                  <p className="info-value">
+                    {attendance.length} Scheduled
+                  </p>
                 </div>
               </div>
             </div>
 
-            {/* Attendance list */}
+            {/* Attendance dates */}
             <div className="attendance-section">
               <div className="section-header">
                 <h2 className="section-title">Attendance Dates</h2>
@@ -466,7 +501,8 @@ const CourseDetails = () => {
               <div className="attendance-grid">
                 {reversedAttendance.map((att, idx) => {
                   const isLatest = idx === 0;
-                  const isActive = att.expiresAt && Date.now() < att.expiresAt;
+                  const isActive =
+                    att.expiresAt && Date.now() < att.expiresAt;
 
                   return (
                     <div key={att.id}>
@@ -477,9 +513,9 @@ const CourseDetails = () => {
                             ? () => setShowQRCode(!showQRCode)
                             : undefined
                         }
-                        className={`attendance-card${att.highlighted ? " highlighted" : ""}${
-                          isLatest && isActive ? " clickable" : ""
-                        }`}
+                        className={`attendance-card ${
+                          att.highlighted ? "highlighted" : ""
+                        } ${isLatest && isActive ? "clickable" : ""}`}
                       >
                         <div className="attendance-date">
                           <span className="date-text">{att.displayDate}</span>
@@ -511,11 +547,13 @@ const CourseDetails = () => {
                         <div>
                           <span style={{ fontSize: "13px", color: "#6b7280" }}>
                             Code:{" "}
-                            <strong style={{ color: "#1f2937" }}>{att.code}</strong>
+                            <strong style={{ color: "#1f2937" }}>
+                              {att.code}
+                            </strong>
                           </span>
                         </div>
 
-                        {/* Countdown timer — always driven by server expiresAt */}
+                        {/* Timer — shown on every card while active, expired badge otherwise */}
                         {att.expiresAt && (
                           <div style={{ marginTop: "6px" }}>
                             <CountdownTimer expiresAt={att.expiresAt} />
@@ -523,13 +561,19 @@ const CourseDetails = () => {
                         )}
 
                         {isLatest && isActive && (
-                          <p style={{ margin: "6px 0 0", fontSize: "11px", color: "#9ca3af" }}>
+                          <p
+                            style={{
+                              margin: "6px 0 0",
+                              fontSize: "11px",
+                              color: "#9ca3af",
+                            }}
+                          >
                             Tap to show QR code
                           </p>
                         )}
                       </div>
 
-                      {/* ── QR popup — latest active session only ── */}
+                      {/* ── QR popup (latest active session only) ── */}
                       {isLatest && isActive && showQRCode && (
                         <div
                           className="qr-overlay"
@@ -544,23 +588,38 @@ const CourseDetails = () => {
 
                               const handleDownloadPDF = async () => {
                                 try {
-                                  const html2canvas = (await import("html2canvas")).default;
+                                  const html2canvas = (
+                                    await import("html2canvas")
+                                  ).default;
                                   const { jsPDF } = await import("jspdf");
-                                  const printElement = document.querySelector(".pdf-content");
+                                  const printElement =
+                                    document.querySelector(".pdf-content");
                                   if (!printElement) return;
                                   printElement.style.display = "block";
                                   printElement.style.position = "relative";
-                                  const canvas = await html2canvas(printElement, {
-                                    scale: 2,
-                                    backgroundColor: "#ffffff",
-                                  });
+                                  const canvas = await html2canvas(
+                                    printElement,
+                                    { scale: 2, backgroundColor: "#ffffff" }
+                                  );
                                   printElement.style.display = "none";
                                   printElement.style.position = "absolute";
                                   const imgData = canvas.toDataURL("image/png");
-                                  const pdf = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
+                                  const pdf = new jsPDF({
+                                    orientation: "portrait",
+                                    unit: "mm",
+                                    format: "a4",
+                                  });
                                   const imgWidth = 210;
-                                  const imgHeight = (canvas.height * imgWidth) / canvas.width;
-                                  pdf.addImage(imgData, "PNG", 0, 0, imgWidth, imgHeight);
+                                  const imgHeight =
+                                    (canvas.height * imgWidth) / canvas.width;
+                                  pdf.addImage(
+                                    imgData,
+                                    "PNG",
+                                    0,
+                                    0,
+                                    imgWidth,
+                                    imgHeight
+                                  );
                                   pdf.save(`Attendance-QR-${att.code}.pdf`);
                                 } catch (err) {
                                   console.error("Error generating PDF:", err);
@@ -570,10 +629,17 @@ const CourseDetails = () => {
 
                               return (
                                 <>
-                                  {/* Screen view */}
+                                  {/* Screen */}
                                   <div className="screen-only">
-                                    <div style={{ marginBottom: "12px", textAlign: "center" }}>
-                                      <CountdownTimer expiresAt={att.expiresAt} />
+                                    <div
+                                      style={{
+                                        marginBottom: "12px",
+                                        textAlign: "center",
+                                      }}
+                                    >
+                                      <CountdownTimer
+                                        expiresAt={att.expiresAt}
+                                      />
                                     </div>
                                     <QRCode value={attendanceUrl} size={150} />
                                     <p className="qr-code-text">{att.code}</p>
@@ -599,15 +665,39 @@ const CourseDetails = () => {
                                   </div>
 
                                   {/* Hidden PDF content */}
-                                  <div className="pdf-content" style={{ display: "none" }}>
-                                    <div style={{ padding: "40px", textAlign: "center" }}>
-                                      <h1 style={{ fontSize: "28px", margin: "0 0 10px" }}>
+                                  <div
+                                    className="pdf-content"
+                                    style={{ display: "none" }}
+                                  >
+                                    <div
+                                      style={{
+                                        padding: "40px",
+                                        textAlign: "center",
+                                      }}
+                                    >
+                                      <h1
+                                        style={{
+                                          fontSize: "28px",
+                                          margin: "0 0 10px",
+                                        }}
+                                      >
                                         {course.title}
                                       </h1>
-                                      <h2 style={{ fontSize: "20px", margin: "0 0 10px", fontWeight: "normal" }}>
+                                      <h2
+                                        style={{
+                                          fontSize: "20px",
+                                          margin: "0 0 10px",
+                                          fontWeight: "normal",
+                                        }}
+                                      >
                                         Attendance QR Code
                                       </h2>
-                                      <p style={{ fontSize: "14px", color: "#999" }}>
+                                      <p
+                                        style={{
+                                          fontSize: "14px",
+                                          color: "#999",
+                                        }}
+                                      >
                                         {att.displayDate} • {att.displayTime}
                                       </p>
                                       <div
@@ -619,7 +709,10 @@ const CourseDetails = () => {
                                           display: "inline-block",
                                         }}
                                       >
-                                        <QRCode value={attendanceUrl} size={300} />
+                                        <QRCode
+                                          value={attendanceUrl}
+                                          size={300}
+                                        />
                                       </div>
                                       <div
                                         style={{
@@ -629,7 +722,13 @@ const CourseDetails = () => {
                                           borderRadius: "8px",
                                         }}
                                       >
-                                        <p style={{ fontSize: "14px", color: "#666", margin: "0 0 8px" }}>
+                                        <p
+                                          style={{
+                                            fontSize: "14px",
+                                            color: "#666",
+                                            margin: "0 0 8px",
+                                          }}
+                                        >
                                           Manual Code:
                                         </p>
                                         <p
@@ -653,13 +752,31 @@ const CourseDetails = () => {
                                           marginRight: "auto",
                                         }}
                                       >
-                                        <h3 style={{ fontSize: "18px", marginBottom: "15px" }}>
+                                        <h3
+                                          style={{
+                                            fontSize: "18px",
+                                            marginBottom: "15px",
+                                          }}
+                                        >
                                           How to Mark Attendance:
                                         </h3>
-                                        <ol style={{ paddingLeft: "25px", lineHeight: "1.8" }}>
-                                          <li>Scan the QR code with your phone camera</li>
-                                          <li>Or manually enter the code in the app</li>
-                                          <li>Submit to record your attendance</li>
+                                        <ol
+                                          style={{
+                                            paddingLeft: "25px",
+                                            lineHeight: "1.8",
+                                          }}
+                                        >
+                                          <li>
+                                            Scan the QR code with your phone
+                                            camera
+                                          </li>
+                                          <li>
+                                            Or manually enter the code in the
+                                            app
+                                          </li>
+                                          <li>
+                                            Submit to record your attendance
+                                          </li>
                                         </ol>
                                       </div>
                                     </div>
@@ -686,7 +803,9 @@ const CourseDetails = () => {
             disabled={createAttendanceMutation.isPending}
           >
             <span className="btn-icon">+</span>
-            {createAttendanceMutation.isPending ? "Creating..." : "Create Attendance"}
+            {createAttendanceMutation.isPending
+              ? "Creating..."
+              : "Create Attendance"}
           </button>
 
           <button
