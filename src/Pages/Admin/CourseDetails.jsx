@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import Swal from "sweetalert2";
 import { useParams, useNavigate } from "react-router-dom";
 import QRCode from "react-qr-code";
 import {
@@ -15,6 +16,7 @@ import { useCourse, useCourseStudents } from "../../hooks/useCourses";
 import {
   useCourseAttendance,
   useCreateAttendance,
+  useDeleteAttendance,
 } from "../../hooks/useAttendance";
 import AttendanceTable from "../../Components/AttendanceTable";
 import "../../styles/CourseDetails.css";
@@ -259,6 +261,23 @@ const CourseDetails = () => {
   } = useCourseAttendance(courseId);
 
   const createAttendanceMutation = useCreateAttendance();
+  const deleteAttendanceMutation = useDeleteAttendance();
+
+  const handleDeleteAttendance = async (attendanceId) => {
+    const result = await Swal.fire({
+      title: "Delete Attendance?",
+      text: "This session and all its records will be permanently deleted.",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#dc2626",
+      cancelButtonColor: "#6b7280",
+      confirmButtonText: "Yes, delete it",
+      cancelButtonText: "Cancel",
+    });
+    if (result.isConfirmed) {
+      deleteAttendanceMutation.mutate({ attendanceId });
+    }
+  };
 
   const isLoading = courseLoading || studentsLoading || attendanceLoading;
   const error = courseError || attendanceError;
@@ -518,8 +537,8 @@ const CourseDetails = () => {
                           </span>
                         </div>
 
-                        {/* Countdown timer — always driven by server expiresAt */}
-                        {att.expiresAt && (
+                        {/* Countdown timer — only on the latest card */}
+                        {isLatest && att.expiresAt && (
                           <div style={{ marginTop: "6px" }}>
                             <CountdownTimer expiresAt={att.expiresAt} />
                           </div>
@@ -530,6 +549,31 @@ const CourseDetails = () => {
                             Tap to show QR code
                           </p>
                         )}
+
+                        {/* Delete button */}
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDeleteAttendance(att.id);
+                          }}
+                          disabled={deleteAttendanceMutation.isPending}
+                          style={{
+                            marginTop: "10px",
+                            padding: "4px 12px",
+                            borderRadius: "6px",
+                            border: "1px solid #fecaca",
+                            background: "#fff5f5",
+                            color: "#dc2626",
+                            fontSize: "12px",
+                            fontWeight: "600",
+                            cursor: deleteAttendanceMutation.isPending ? "not-allowed" : "pointer",
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "4px",
+                          }}
+                        >
+                          🗑 Delete
+                        </button>
                       </div>
 
                       {/* ── QR popup — latest active session only ── */}
