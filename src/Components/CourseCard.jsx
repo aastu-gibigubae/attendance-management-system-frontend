@@ -26,6 +26,18 @@ const CourseCard = ({
     }
   };
 
+  // Check if the enrollment window is currently open
+  const now = new Date();
+  const enrollStart = course.enrollment_start_date
+    ? new Date(course.enrollment_start_date)
+    : null;
+  const enrollDeadline = course.enrollment_deadline
+    ? new Date(course.enrollment_deadline)
+    : null;
+
+  const enrollmentNotStarted = enrollStart && now < enrollStart;
+  const enrollmentClosed = enrollDeadline && now > enrollDeadline;
+
   // Show alert if disabled view button is clicked
   const handleViewClick = (e) => {
     if (userType === "student" && !alreadyEnrolled) {
@@ -100,22 +112,41 @@ const CourseCard = ({
 
         {/* Enroll button for students who haven't enrolled yet */}
         {userType === "student" && !alreadyEnrolled && onEnroll && (
-          <button
-            className="action-btn enroll-btn"
-            onClick={handleEnrollClick}
-            disabled={isEnrolling}
-            aria-label="Enroll in course"
-            title="Enroll"
-            style={{
-              backgroundColor: "#4CAF50",
-              color: "white",
-            }}
-          >
-            <UserPlus size={18} />
-            <span className="btn-text">
-              {isEnrolling ? "Enrolling..." : "Enroll"}
-            </span>
-          </button>
+          enrollmentClosed ? (
+            <button
+              className="action-btn enroll-btn"
+              disabled
+              title="Enrollment deadline has passed"
+              style={{ backgroundColor: "#9e9e9e", color: "white", cursor: "not-allowed", opacity: 0.7 }}
+            >
+              <UserPlus size={18} />
+              <span className="btn-text">Closed</span>
+            </button>
+          ) : enrollmentNotStarted ? (
+            <button
+              className="action-btn enroll-btn"
+              disabled
+              title={`Enrollment opens on ${enrollStart?.toLocaleDateString()}`}
+              style={{ backgroundColor: "#90CAF9", color: "#1a237e", cursor: "not-allowed", opacity: 0.8 }}
+            >
+              <UserPlus size={18} />
+              <span className="btn-text">Opens soon</span>
+            </button>
+          ) : (
+            <button
+              className="action-btn enroll-btn"
+              onClick={handleEnrollClick}
+              disabled={isEnrolling}
+              aria-label="Enroll in course"
+              title="Enroll"
+              style={{ backgroundColor: "#4CAF50", color: "white" }}
+            >
+              <UserPlus size={18} />
+              <span className="btn-text">
+                {isEnrolling ? "Enrolling..." : "Enroll"}
+              </span>
+            </button>
+          )
         )}
 
         <button

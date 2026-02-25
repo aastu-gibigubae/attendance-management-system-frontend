@@ -24,6 +24,7 @@ const CourseList = () => {
   const [filterStatus, setFilterStatus] = useState("All");
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedSemester, setSelectedSemester] = useState("all");
+  const [enrollingCourseId, setEnrollingCourseId] = useState(null);
 
   // Helper: compute status from dates
   const computeStatus = (start_date, end_date) => {
@@ -55,6 +56,8 @@ const CourseList = () => {
           description: course.description,
           start_date: course.start_date,
           end_date: course.end_date,
+          enrollment_start_date: course.enrollment_start_date ?? null,
+          enrollment_deadline: course.enrollment_deadline ?? null,
           semester: semesterNumber,
           semesterKey: semesterKey,
           status: computeStatus(course.start_date, course.end_date),
@@ -107,6 +110,8 @@ const CourseList = () => {
       description: course.description ?? "",
       start_date: course.start_date ?? null,
       end_date: course.end_date ?? null,
+      enrollment_start_date: course.enrollment_start_date ?? null,
+      enrollment_deadline: course.enrollment_deadline ?? null,
       semester: semNum,
       semesterKey: semKey,
       status: computeStatus(course.start_date, course.end_date),
@@ -135,6 +140,8 @@ const CourseList = () => {
         description: course.description,
         start_date: course.start_date,
         end_date: course.end_date,
+        enrollment_start_date: course.enrollment_start_date ?? null,
+        enrollment_deadline: course.enrollment_deadline ?? null,
         semester: null,
         semesterKey: "event",
         status: computeStatus(course.start_date, course.end_date),
@@ -165,11 +172,14 @@ const CourseList = () => {
   };
 
   const handleEnroll = (courseId) => {
+    setEnrollingCourseId(courseId);
     enrollMutation.mutate(courseId, {
       onSuccess: () => {
+        setEnrollingCourseId(null);
         // Course list will auto-refresh due to query invalidation
       },
       onError: (error) => {
+        setEnrollingCourseId(null);
         Swal.fire({
           icon: "error",
           title: "Enrollment Failed",
@@ -179,6 +189,8 @@ const CourseList = () => {
     });
   };
 
+  // Only show full loading screen on the very first load, not on background refetches
+  // (e.g. after an enrollment invalidates the queries)
   const combinedLoading = isLoading || myCoursesLoading;
 
   return (
@@ -252,7 +264,7 @@ const CourseList = () => {
                 onEnroll={handleEnroll}
                 userType="student"
                 alreadyEnrolled={course.alreadyEnrolled}
-                isEnrolling={enrollMutation.isPending}
+                isEnrolling={enrollingCourseId === course.id}
               />
             ))}
           </div>
@@ -273,7 +285,7 @@ const CourseList = () => {
                   onEnroll={handleEnroll}
                   userType="student"
                   alreadyEnrolled={course.alreadyEnrolled}
-                  isEnrolling={enrollMutation.isPending}
+                  isEnrolling={enrollingCourseId === course.id}
                 />
               ))}
             </div>
