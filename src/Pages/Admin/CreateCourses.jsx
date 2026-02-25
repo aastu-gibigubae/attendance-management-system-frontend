@@ -8,6 +8,7 @@ const CreateCourses = () => {
   const [formData, setFormData] = useState({
     course_name: "",
     description: "",
+    course_type: "regular",
     year_level: "",
     semester: "",
     start_date: "",
@@ -22,17 +23,20 @@ const CreateCourses = () => {
   // Use React Query mutation
   const createCourseMutation = useCreateCourse();
 
+  const isEvent = formData.course_type === "event";
+
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData({
-      ...formData,
+    setFormData((prev) => ({
+      ...prev,
       [name]: value,
-    });
+      // Clear year_level/semester when switching to event
+      ...(name === "course_type" && value === "event"
+        ? { year_level: "", semester: "" }
+        : {}),
+    }));
     if (errors[name]) {
-      setErrors({
-        ...errors,
-        [name]: "",
-      });
+      setErrors((prev) => ({ ...prev, [name]: "" }));
     }
   };
 
@@ -46,8 +50,11 @@ const CreateCourses = () => {
     else if (formData.description.length > 280)
       newErrors.description = "Description must be 280 characters or less";
 
-    if (!formData.year_level) newErrors.year_level = "Year level is required";
-    if (!formData.semester) newErrors.semester = "Semester is required";
+    // year_level and semester are required only for regular courses
+    if (!isEvent) {
+      if (!formData.year_level) newErrors.year_level = "Year level is required";
+      if (!formData.semester) newErrors.semester = "Semester is required";
+    }
 
     if (!formData.start_date)
       newErrors.start_date = "Course start date is required";
@@ -78,12 +85,21 @@ const CreateCourses = () => {
 
     setSuccessMsg("");
 
-    // Prepare payload
+    // Build payload — omit year_level/semester for event courses
     const payload = {
-      ...formData,
-      year_level: parseInt(formData.year_level, 10),
-      semester: parseInt(formData.semester, 10),
+      course_name: formData.course_name,
+      description: formData.description,
+      course_type: formData.course_type,
+      start_date: formData.start_date,
+      end_date: formData.end_date,
+      enrollment_start_date: formData.enrollment_start_date,
+      enrollment_deadline: formData.enrollment_deadline,
     };
+
+    if (!isEvent) {
+      payload.year_level = parseInt(formData.year_level, 10);
+      payload.semester = parseInt(formData.semester, 10);
+    }
 
     createCourseMutation.mutate(payload, {
       onSuccess: () => {
@@ -97,6 +113,7 @@ const CreateCourses = () => {
         setFormData({
           course_name: "",
           description: "",
+          course_type: "regular",
           year_level: "",
           semester: "",
           start_date: "",
@@ -107,7 +124,10 @@ const CreateCourses = () => {
       },
       onError: (error) => {
         setErrors({
-          submit: error?.response?.data?.message || error?.message || "Course Creation Failed",
+          submit:
+            error?.response?.data?.message ||
+            error?.message ||
+            "Course Creation Failed",
         });
       },
     });
@@ -166,44 +186,86 @@ const CreateCourses = () => {
               )}
             </div>
 
-            <div className="form-row">
-              <div className="form-group">
-                <label className="form-label">Year Level</label>
-                <input
-                  type="number"
-                  name="year_level"
-                  value={formData.year_level}
-                  onChange={handleChange}
-                  placeholder="e.g., 3"
-                  min="1"
-                  className={`form-input ${
-                    errors.year_level ? "input-error" : ""
-                  }`}
-                />
-                {errors.year_level && (
-                  <span className="error-text">{errors.year_level}</span>
-                )}
+            {/* Course Type */}
+            <div className="form-group">
+              <label className="form-label">Course type</label>
+              <div style={{ display: "flex", gap: "1rem", marginTop: "0.25rem" }}>
+                {["regular", "event"].map((type) => (
+                  <label
+                    key={type}
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "0.4rem",
+                      cursor: "pointer",
+                      fontWeight: formData.course_type === type ? "700" : "400",
+                    }}
+                  >
+                    <input
+                      type="radio"
+                      name="course_type"
+                      value={type}
+                      checked={formData.course_type === type}
+                      onChange={handleChange}
+                    />
+                    {type.charAt(0).toUpperCase() + type.slice(1)}
+                  </label>
+                ))}
               </div>
-
-              <div className="form-group">
-                <label className="form-label">Semester</label>
-                <input
-                  type="number"
-                  name="semester"
-                  value={formData.semester}
-                  onChange={handleChange}
-                  placeholder="e.g., 1"
-                  min="1"
-                  max="3"
-                  className={`form-input ${
-                    errors.semester ? "input-error" : ""
-                  }`}
-                />
-                {errors.semester && (
-                  <span className="error-text">{errors.semester}</span>
-                )}
-              </div>
+              {isEvent && (
+                <p
+                  style={{
+                    marginTop: "0.4rem",
+                    fontSize: "0.78rem",
+                    color: "#6b7280",
+                  }}
+                >
+                  Event courses are visible to students of all years &amp; semesters.
+                </p>
+              )}
             </div>
+
+            {/* Year Level & Semester — only for regular courses */}
+            {!isEvent && (
+              <div className="form-row">
+                <div className="form-group">
+                  <label className="form-label">Year Level</label>
+                  <input
+                    type="number"
+                    name="year_level"
+                    value={formData.year_level}
+                    onChange={handleChange}
+                    placeholder="e.g., 3"
+                    min="1"
+                    className={`form-input ${
+                      errors.year_level ? "input-error" : ""
+                    }`}
+                  />
+                  {errors.year_level && (
+                    <span className="error-text">{errors.year_level}</span>
+                  )}
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">Semester</label>
+                  <input
+                    type="number"
+                    name="semester"
+                    value={formData.semester}
+                    onChange={handleChange}
+                    placeholder="e.g., 1"
+                    min="1"
+                    max="3"
+                    className={`form-input ${
+                      errors.semester ? "input-error" : ""
+                    }`}
+                  />
+                  {errors.semester && (
+                    <span className="error-text">{errors.semester}</span>
+                  )}
+                </div>
+              </div>
+            )}
 
             {/* Date Fields */}
             <div className="form-row">

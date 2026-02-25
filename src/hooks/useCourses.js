@@ -7,6 +7,7 @@ export const courseKeys = {
   lists: () => [...courseKeys.all, 'list'],
   my: () => [...courseKeys.all, 'my'],
   studentCourses: () => [...courseKeys.all, 'student-courses'],
+  eventCourses: () => [...courseKeys.all, 'event-courses'],
   detail: (id) => [...courseKeys.all, 'detail', id],
   students: (courseId) => [...courseKeys.all, 'students', courseId],
 };
@@ -41,6 +42,17 @@ export const useStudentCourses = () => {
   return useQuery({
     queryKey: courseKeys.studentCourses(),
     queryFn: courseService.getStudentCourses,
+  });
+};
+
+/**
+ * Hook to get all event-type courses (visible to all students)
+ * @returns {Object} Query object with data, isLoading, error, etc.
+ */
+export const useEventCourses = () => {
+  return useQuery({
+    queryKey: courseKeys.eventCourses(),
+    queryFn: courseService.getEventCourses,
   });
 };
 

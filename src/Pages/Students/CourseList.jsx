@@ -1,6 +1,10 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useStudentCourses, useMyCourses } from "../../hooks/useCourses";
+import {
+  useStudentCourses,
+  useMyCourses,
+  useEventCourses,
+} from "../../hooks/useCourses";
 import { useSelfEnroll } from "../../hooks/useEnrollment";
 import CourseCard from "../../Components/CourseCard";
 import "../../styles/CourseList.css";
@@ -14,6 +18,7 @@ const CourseList = () => {
   // Use React Query hooks
   const { data, isLoading, error, isError } = useStudentCourses();
   const { data: myCoursesData, isLoading: myCoursesLoading } = useMyCourses();
+  const { data: eventData, isLoading: eventLoading } = useEventCourses();
   const enrollMutation = useSelfEnroll();
 
   const [filterStatus, setFilterStatus] = useState("All");
@@ -30,7 +35,7 @@ const CourseList = () => {
     return "Current";
   };
 
-  // ── Build course list from useStudentCourses ──────────────────────────────
+  // ── Build regular course list from useStudentCourses ─────────────────────
   const allCourses = [];
   const semesterOptions = ["all"];
   const seenIds = new Set();
@@ -59,10 +64,13 @@ const CourseList = () => {
     });
   }
 
+  // ── Build a set of event course IDs so we never show them in the
+  //    regular section (they live exclusively in the Events section below)
+  const eventCourseIdSet = new Set(
+    (eventData?.data ?? []).map((c) => c.id)
+  );
+
   // ── Append extra courses from useMyCourses (deduplicate by id) ───────────
-  // /course/my returns enrolled courses that may not appear in /student/courses
-  // (e.g. courses from a different year). We add them under a synthetic
-  // semesterKey so the semester filter still works.
   const myCoursesRaw =
     myCoursesData?.courses ??
     myCoursesData?.data ??
@@ -73,7 +81,8 @@ const CourseList = () => {
     const courseId = course.id;
     const courseName = course.course_name ?? course.title ?? "";
 
-    // Skip if already present from useStudentCourses (by id or name)
+    // Never render event courses in the regular section
+    if (eventCourseIdSet.has(courseId)) return;
     if (seenIds.has(courseId)) return;
     const alreadyByName = allCourses.some(
       (c) => c.title.toLowerCase() === courseName.toLowerCase()
@@ -82,7 +91,6 @@ const CourseList = () => {
 
     seenIds.add(courseId);
 
-    // Derive semesterKey — /course/my returns `semester` as a plain number (e.g. 1)
     const semKey =
       course.semesterKey ??
       course.semester_key ??
@@ -102,11 +110,11 @@ const CourseList = () => {
       semester: semNum,
       semesterKey: semKey,
       status: computeStatus(course.start_date, course.end_date),
-      alreadyEnrolled: true, // /course/my only returns enrolled courses
+      alreadyEnrolled: true,
     });
   });
 
-  // ── Apply filters ─────────────────────────────────────────────────────────
+  // ── Apply filters to regular courses ──────────────────────────────────────
   const filteredCourses = allCourses.filter((course) => {
     const matchesStatus =
       filterStatus === "All" || course.status === filterStatus;
@@ -116,6 +124,31 @@ const CourseList = () => {
     const matchesSemester =
       selectedSemester === "all" || course.semesterKey === selectedSemester;
     return matchesStatus && matchesSearch && matchesSemester;
+  });
+
+  // ── Build event course list ───────────────────────────────────────────────
+  const eventCoursesRaw = eventData?.data ?? [];
+  const eventCourses = Array.isArray(eventCoursesRaw)
+    ? eventCoursesRaw.map((course) => ({
+        id: course.id,
+        title: course.course_name,
+        description: course.description,
+        start_date: course.start_date,
+        end_date: course.end_date,
+        semester: null,
+        semesterKey: "event",
+        status: computeStatus(course.start_date, course.end_date),
+        alreadyEnrolled: course.alreadyEnrolled,
+      }))
+    : [];
+
+  const filteredEventCourses = eventCourses.filter((course) => {
+    const matchesStatus =
+      filterStatus === "All" || course.status === filterStatus;
+    const matchesSearch =
+      course.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      course.description.toLowerCase().includes(searchTerm.toLowerCase());
+    return matchesStatus && matchesSearch;
   });
 
   const handleView = (courseId) => {
@@ -163,9 +196,6 @@ const CourseList = () => {
           />
 
           <div className="filter-tabs">
-            <label style={{ marginRight: "1rem", fontWeight: "bold" }}>
-              Semester:
-            </label>
             {semesterOptions.map((semester) => (
               <button
                 key={semester}
@@ -198,6 +228,7 @@ const CourseList = () => {
           </div>
         </div>
 
+        {/* ── Regular Courses Section ── */}
         {combinedLoading ? (
           <LoadingPage message="Loading courses..." />
         ) : isError ? (
@@ -227,6 +258,26 @@ const CourseList = () => {
           </div>
         ) : (
           <p>No courses found.</p>
+        )}
+
+        {/* ── Event Courses Section ── */}
+        {!eventLoading && filteredEventCourses.length > 0 && (
+          <div style={{ marginTop: "2.5rem" }}>
+            <div className="courses-grid">
+              {filteredEventCourses.map((course) => (
+                <CourseCard
+                  key={course.id}
+                  course={course}
+                  onView={handleView}
+                  onEdit={handleEdit}
+                  onEnroll={handleEnroll}
+                  userType="student"
+                  alreadyEnrolled={course.alreadyEnrolled}
+                  isEnrolling={enrollMutation.isPending}
+                />
+              ))}
+            </div>
+          </div>
         )}
       </div>
     </>

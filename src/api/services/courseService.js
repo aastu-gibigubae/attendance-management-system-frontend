@@ -75,6 +75,15 @@ export const courseService = {
   },
 
   /**
+   * Get all event-type courses (visible to all students)
+   * @returns {Promise} Response with event courses
+   */
+  getEventCourses: async () => {
+    const response = await apiClient.get('/course?type=event');
+    return response.data;
+  },
+
+  /**
    * Get students enrolled in a course
    * @param {string|number} courseId - Course ID
    * @returns {Promise} Response with enrolled students
