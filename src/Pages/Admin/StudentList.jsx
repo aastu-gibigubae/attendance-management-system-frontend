@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Search, Edit2, Trash2, X, Save } from "lucide-react";
+import { Search, Edit2, Trash2, X, Save, Eye, EyeOff } from "lucide-react";
 import Swal from "sweetalert2";
 import { useStudents, useUpdateStudent, useDeleteStudent } from "../../hooks/useStudents";
 import "../../styles/StudentList.css";
@@ -9,6 +9,7 @@ const StudentList = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [isSearching, setIsSearching] = useState(false);
   const [searchResults, setSearchResults] = useState(null);
+  const [showPassword, setShowPassword] = useState(false);
 
   // Use React Query hooks
   const { data, isLoading } = useStudents();
@@ -557,13 +558,36 @@ const StudentList = () => {
                   <div className="form-grid">
                     <div className="form-group">
                       <label>New Password</label>
-                      <input
-                        type="password"
-                        name="password"
-                        value={editForm.password}
-                        onChange={handleEditChange}
-                        placeholder="Leave empty to keep current password"
-                      />
+                      <div style={{ position: 'relative' }}>
+                        <input
+                          type={showPassword ? 'text' : 'password'}
+                          name="password"
+                          value={editForm.password}
+                          onChange={handleEditChange}
+                          placeholder="Leave empty to keep current password"
+                          style={{ paddingRight: '40px', width: '100%', boxSizing: 'border-box' }}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowPassword((v) => !v)}
+                          style={{
+                            position: 'absolute',
+                            right: '10px',
+                            top: '50%',
+                            transform: 'translateY(-50%)',
+                            background: 'none',
+                            border: 'none',
+                            cursor: 'pointer',
+                            padding: '0',
+                            color: '#6b7280',
+                            display: 'flex',
+                            alignItems: 'center',
+                          }}
+                          tabIndex={-1}
+                        >
+                          {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                        </button>
+                      </div>
                       <small style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>
                         Only fill this if you want to change the password
                       </small>

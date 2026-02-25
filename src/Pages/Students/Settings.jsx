@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Save, ArrowLeft, CheckCircle, XCircle, Loader2 } from 'lucide-react';
+import { Save, ArrowLeft, CheckCircle, XCircle, Loader2, Eye, EyeOff } from 'lucide-react';
 import { useMe, useUpdateMe } from '../../hooks/useStudentProfile';
 import LoadingPage from '../../Components/LoadingPage';
 import ErrorPage from '../../Components/ErrorPage';
@@ -32,6 +32,8 @@ const Settings = () => {
   const [formData, setFormData] = useState(EMPTY_FORM);
   const [showSuccess, setShowSuccess] = useState(false);
   const [passwordError, setPasswordError] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   // Populate form when data loads
   useEffect(() => {
@@ -380,28 +382,74 @@ const Settings = () => {
             <div className="settings-grid">
               <div className="form-group">
                 <label htmlFor="password">New Password</label>
-                <input
-                  id="password"
-                  type="password"
-                  name="password"
-                  value={formData.password}
-                  onChange={handleChange}
-                  placeholder="Leave blank to keep current"
-                  autoComplete="new-password"
-                />
+                <div style={{ position: 'relative' }}>
+                  <input
+                    id="password"
+                    type={showPassword ? 'text' : 'password'}
+                    name="password"
+                    value={formData.password}
+                    onChange={handleChange}
+                    placeholder="Leave blank to keep current"
+                    autoComplete="new-password"
+                    style={{ paddingRight: '40px', width: '100%', boxSizing: 'border-box' }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword((v) => !v)}
+                    style={{
+                      position: 'absolute',
+                      right: '10px',
+                      top: '50%',
+                      transform: 'translateY(-50%)',
+                      background: 'none',
+                      border: 'none',
+                      cursor: 'pointer',
+                      padding: '0',
+                      color: '#6b7280',
+                      display: 'flex',
+                      alignItems: 'center',
+                    }}
+                    tabIndex={-1}
+                  >
+                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  </button>
+                </div>
               </div>
 
               <div className="form-group">
                 <label htmlFor="confirm_password">Confirm Password</label>
-                <input
-                  id="confirm_password"
-                  type="password"
-                  name="confirm_password"
-                  value={formData.confirm_password}
-                  onChange={handleChange}
-                  placeholder="Repeat new password"
-                  autoComplete="new-password"
-                />
+                <div style={{ position: 'relative' }}>
+                  <input
+                    id="confirm_password"
+                    type={showConfirmPassword ? 'text' : 'password'}
+                    name="confirm_password"
+                    value={formData.confirm_password}
+                    onChange={handleChange}
+                    placeholder="Repeat new password"
+                    autoComplete="new-password"
+                    style={{ paddingRight: '40px', width: '100%', boxSizing: 'border-box' }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword((v) => !v)}
+                    style={{
+                      position: 'absolute',
+                      right: '10px',
+                      top: '50%',
+                      transform: 'translateY(-50%)',
+                      background: 'none',
+                      border: 'none',
+                      cursor: 'pointer',
+                      padding: '0',
+                      color: '#6b7280',
+                      display: 'flex',
+                      alignItems: 'center',
+                    }}
+                    tabIndex={-1}
+                  >
+                    {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  </button>
+                </div>
               </div>
             </div>
 
