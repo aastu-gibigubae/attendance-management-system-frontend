@@ -123,7 +123,12 @@
   display: none;
 }
 
-/* Show button text on larger screens */
+/* Enroll button text is always visible — state changes must be readable on mobile */
+.enroll-btn-text {
+  display: inline;
+}
+
+/* Show all button text on larger screens */
 @media (min-width: 768px) {
   .btn-text {
     display: inline;

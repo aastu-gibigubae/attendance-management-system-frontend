@@ -79,10 +79,10 @@ export const useSelfEnroll = () => {
   return useMutation({
     mutationFn: enrollmentService.selfEnroll,
     onSuccess: () => {
-      // Invalidate student courses to refresh enrollment status
+      // Invalidate all three course queries so enrollment status updates everywhere
       queryClient.invalidateQueries({ queryKey: courseKeys.studentCourses() });
-      // Also invalidate my courses
       queryClient.invalidateQueries({ queryKey: courseKeys.my() });
+      queryClient.invalidateQueries({ queryKey: courseKeys.eventCourses() });
     },
   });
 };

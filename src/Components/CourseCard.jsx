@@ -120,7 +120,7 @@ const CourseCard = ({
               style={{ backgroundColor: "#9e9e9e", color: "white", cursor: "not-allowed", opacity: 0.7 }}
             >
               <UserPlus size={18} />
-              <span className="btn-text">Closed</span>
+              <span className="enroll-btn-text">Closed</span>
             </button>
           ) : enrollmentNotStarted ? (
             <button
@@ -130,7 +130,7 @@ const CourseCard = ({
               style={{ backgroundColor: "#90CAF9", color: "#1a237e", cursor: "not-allowed", opacity: 0.8 }}
             >
               <UserPlus size={18} />
-              <span className="btn-text">Opens soon</span>
+              <span className="enroll-btn-text">Opens soon</span>
             </button>
           ) : (
             <button
@@ -142,7 +142,7 @@ const CourseCard = ({
               style={{ backgroundColor: "#4CAF50", color: "white" }}
             >
               <UserPlus size={18} />
-              <span className="btn-text">
+              <span className="enroll-btn-text">
                 {isEnrolling ? "Enrolling..." : "Enroll"}
               </span>
             </button>
