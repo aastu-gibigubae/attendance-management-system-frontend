@@ -85,10 +85,10 @@ const CourseLists = () => {
     setEditForm({
       course_name: course.title,
       description: course.description,
-      start_date: toDateTimeLocal(course.start_date),
-      end_date: toDateTimeLocal(course.end_date),
-      enrollment_start_date: toDateTimeLocal(course.enrollment_start_date),
-      enrollment_deadline: toDateTimeLocal(course.enrollment_deadline),
+      start_date: toDateOnly(course.start_date),
+      end_date: toDateOnly(course.end_date),
+      enrollment_start_date: toDateOnly(course.enrollment_start_date),
+      enrollment_deadline: toDateOnly(course.enrollment_deadline),
       year_level: course.year_level || "",
       semester: course.semester || "",
     });
@@ -253,9 +253,9 @@ const CourseLists = () => {
     }
   };
 
-  const toDateTimeLocal = (iso) => {
+  const toDateOnly = (iso) => {
     if (!iso) return "";
-    return new Date(iso).toISOString().slice(0, 16);
+    return new Date(iso).toISOString().slice(0, 10);
   };
 
   const closeModal = () => {
@@ -398,7 +398,7 @@ const CourseLists = () => {
               <div className="modal-form-group">
                 <label className="modal-label">Start Date</label>
                 <input
-                  type="datetime-local"
+                  type="date"
                   className="modal-input"
                   value={editForm.start_date}
                   onChange={(e) =>
@@ -410,7 +410,7 @@ const CourseLists = () => {
               <div className="modal-form-group">
                 <label className="modal-label">End Date</label>
                 <input
-                  type="datetime-local"
+                  type="date"
                   className="modal-input"
                   value={editForm.end_date}
                   onChange={(e) =>
@@ -424,7 +424,7 @@ const CourseLists = () => {
               <div className="modal-form-group">
                 <label className="modal-label">Enrollment Start</label>
                 <input
-                  type="datetime-local"
+                  type="date"
                   className="modal-input"
                   value={editForm.enrollment_start_date}
                   onChange={(e) =>
@@ -439,7 +439,7 @@ const CourseLists = () => {
               <div className="modal-form-group">
                 <label className="modal-label">Enrollment Deadline</label>
                 <input
-                  type="datetime-local"
+                  type="date"
                   className="modal-input"
                   value={editForm.enrollment_deadline}
                   onChange={(e) =>
