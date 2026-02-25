@@ -444,17 +444,6 @@ const SignUp = () => {
                     className="form-input"
                   />
                 </div>
-                <div className="form-group file-upload-group">
-                  {/* Label removed or styled differently if needed */}
-                  <input
-                    type="file"
-                    id="idFile"
-                    name="idFile"
-                    onChange={handleChange}
-                    accept="image/*,.pdf"
-                    className="form-input file-input" // Ensure both classes are here
-                  />
-                </div>
               </div>
 
               {/* Email */}

@@ -413,16 +413,6 @@ const RegisterStudent = () => {
                 className="form-input"
               />
             </div>
-            <div className="form-group file-upload-group">
-              <input
-                type="file"
-                id="idFile"
-                name="idFile"
-                onChange={handleChange}
-                accept="image/*,.pdf"
-                className="form-input file-input"
-              />
-            </div>
           </div>
 
           {/* Email */}
