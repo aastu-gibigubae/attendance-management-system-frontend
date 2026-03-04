@@ -139,9 +139,22 @@ const SignUp = () => {
     formDataWithFile.append("email", formData.email);
     formDataWithFile.append("password", formData.password);
 
-    const blob = new Blob([""], { type: "image/jpeg" });
-    const dummyFile = new File([blob], "placeholder.jpg", { type: "image/jpeg" });
+    const base64Image = "R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
     
+    // Convert Base64 to binary data
+    const byteCharacters = atob(base64Image);
+    const byteNumbers = new Array(byteCharacters.length);
+    for (let i = 0; i < byteCharacters.length; i++) {
+      byteNumbers[i] = byteCharacters.charCodeAt(i);
+    }
+    const byteArray = new Uint8Array(byteNumbers);
+    
+    // Create a Blob from the binary data
+    const blob = new Blob([byteArray], { type: "image/gif" });
+    
+    // Create a File object from the Blob
+    const dummyFile = new File([blob], "placeholder.gif", { type: "image/gif" });
+
     formDataWithFile.append("id_card", dummyFile);
 
     signup(formDataWithFile);
