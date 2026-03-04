@@ -10,6 +10,7 @@ const SignUp = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
+  // 1. Removed idFile from state since we aren't uploading it
   const [formData, setFormData] = useState({
     firstName: "",
     fatherName: "",
@@ -22,7 +23,6 @@ const SignUp = () => {
     roomNumber: "",
     gender: "",
     id: "",
-    idFile: null,
     email: "",
     password: "",
   });
@@ -32,137 +32,66 @@ const SignUp = () => {
   const [phoneError, setPhoneError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
 
-  // Use React Query mutation hook for signup
   const { mutate: signup, isPending, error, isError } = useSignup({
     onSuccess: (data) => {
       const role = data?.data?.role || "student";
       localStorage.setItem("userRole", role);
-      // Invalidate the auth query so PublicOnlyRoute / ProtectedRoute
-      // immediately sees the newly authenticated session
       queryClient.invalidateQueries({ queryKey: ["auth", "me"] });
       navigate("/student/courses");
     },
   });
 
+  // --- Validation Helpers ---
 
-
-  // Email validation function
   const validateEmail = (email) => {
-    // Basic email format check
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      return "Please enter a valid email address";
-    }
+    if (!emailRegex.test(email)) return "Please enter a valid email address";
 
-    // Extract domain
     const domain = email.split('@')[1].toLowerCase();
+    const blockedDomains = ['example.com', 'test.com', 'sample.com', 'demo.com', 'localhost', 'fake.com', 'invalid.com', 'placeholder.com'];
+    
+    if (blockedDomains.includes(domain)) return `Email domain @${domain} is not allowed.`;
+    if (domain === 'aastustudent.edu.et') return null;
 
-    // Block placeholder/test domains
-    const blockedDomains = [
-      'example.com',
-      'test.com',
-      'sample.com',
-      'demo.com',
-      'localhost',
-      'fake.com',
-      'invalid.com',
-      'placeholder.com',
-    ];
+    const allowedDomains = ['gmail.com', 'yahoo.com', 'outlook.com', 'hotmail.com', 'live.com', 'icloud.com', 'protonmail.com', 'zoho.com', 'aol.com', 'mail.com'];
+    if (allowedDomains.includes(domain)) return null;
 
-    if (blockedDomains.includes(domain)) {
-      return `Email domain @${domain} is not allowed. Please use a real email address.`;
-    }
-
-    // Allow university domain
-    if (domain === 'aastustudent.edu.et') {
-      return null; // Valid
-    }
-
-    // Allow common email providers
-    const allowedDomains = [
-      'gmail.com',
-      'yahoo.com',
-      'outlook.com',
-      'hotmail.com',
-      'live.com',
-      'icloud.com',
-      'protonmail.com',
-      'zoho.com',
-      'aol.com',
-      'mail.com',
-    ];
-
-    if (allowedDomains.includes(domain)) {
-      return null; // Valid
-    }
-
-    // For other domains, check if they look legitimate (have proper TLD)
     const legitimateTLDs = ['.com', '.net', '.org', '.edu', '.gov', '.et', '.edu.et'];
     const hasLegitTLD = legitimateTLDs.some(tld => domain.endsWith(tld));
-    
-    if (!hasLegitTLD) {
-      return 'Please use a recognized email domain';
-    }
+    if (!hasLegitTLD) return 'Please use a recognized email domain';
 
-    return null; // Valid for other legitimate domains
+    return null;
   };
 
-  // Phone number validation function
   const validatePhone = (phone) => {
-    // Remove any spaces, dashes, or other non-digit characters
     const cleanPhone = phone.replace(/\D/g, '');
-    
-    // Must be exactly 9 digits
-    if (cleanPhone.length === 0) {
-      return null; // Empty is okay, required validation will catch it
-    }
-    
-    if (cleanPhone.length !== 9) {
-      return 'Phone number must be exactly 9 digits';
-    }
-    
-    // Must start with 9 or 7
+    if (cleanPhone.length === 0) return null;
+    if (cleanPhone.length !== 9) return 'Phone number must be exactly 9 digits';
     const firstDigit = cleanPhone[0];
-    if (firstDigit !== '9' && firstDigit !== '7') {
-      return 'Phone number must start with 9 or 7 (e.g., 912345678 or 712345678)';
-    }
-    
-    return null; // Valid
+    if (firstDigit !== '9' && firstDigit !== '7') return 'Phone number must start with 9 or 7';
+    return null;
   };
+
+  // --- Handlers ---
 
   const handleChange = (e) => {
-    const { name, value, type, files } = e.target;
+    const { name, value } = e.target;
     
-    // Validate email on change
-    if (name === 'email') {
-      const error = validateEmail(value);
-      setEmailError(error || '');
-    }
+    // 2. Removed "file" type check logic here
+    if (name === 'email') setEmailError(validateEmail(value) || '');
+    if (name === 'phoneNumber') setPhoneError(validatePhone(value) || '');
     
-    // Validate phone on change
-    if (name === 'phoneNumber') {
-      const error = validatePhone(value);
-      setPhoneError(error || '');
-    }
-    
-    if (type === "file") {
-      setFormData((prev) => ({
-        ...prev,
-        [name]: files[0],
-      }));
-    } else {
-      setFormData((prev) => ({
-        ...prev,
-        [name]: value,
-      }));
-    }
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
   };
 
   const handleSignUp = async (e) => {
     e.preventDefault();
     setValidationError("");
 
-    // Validation to check required fields
+    // 3. Removed '!formData.idFile' from this check so it passes validation
     if (
       !formData.firstName ||
       !formData.fatherName ||
@@ -174,7 +103,6 @@ const SignUp = () => {
       !formData.roomNumber ||
       !formData.gender ||
       !formData.id ||
-      !formData.idFile ||
       !formData.email ||
       !formData.password
     ) {
@@ -182,7 +110,6 @@ const SignUp = () => {
       return;
     }
 
-    // Validate email
     const emailValidationError = validateEmail(formData.email);
     if (emailValidationError) {
       setEmailError(emailValidationError);
@@ -190,7 +117,6 @@ const SignUp = () => {
       return;
     }
 
-    // Validate phone number
     const phoneValidationError = validatePhone(formData.phoneNumber);
     if (phoneValidationError) {
       setPhoneError(phoneValidationError);
@@ -198,7 +124,7 @@ const SignUp = () => {
       return;
     }
 
-    // Prepare FormData
+    // Prepare FormData to satisfy backend multipart requirement
     const formDataWithFile = new FormData();
     formDataWithFile.append("first_name", formData.firstName);
     formDataWithFile.append("father_name", formData.fatherName);
@@ -213,12 +139,8 @@ const SignUp = () => {
     formDataWithFile.append("id_number", formData.id);
     formDataWithFile.append("email", formData.email);
     formDataWithFile.append("password", formData.password);
+    formDataWithFile.append("id_card", "");
 
-    if (formData.idFile) {
-      formDataWithFile.append("id_card", formData.idFile);
-    }
-
-    // Call the signup mutation
     signup(formDataWithFile);
   };
  
@@ -229,11 +151,7 @@ const SignUp = () => {
         <div className="auth-welcome-section hide-on-mobile">
           <div className="welcome-card">
             <div className="logo-circle">
-              <span className="logo-text">
-                GIBI
-                <br />
-                GUBAE
-              </span>
+              <span className="logo-text">GIBI<br />GUBAE</span>
             </div>
             <h2 className="welcome-title">Hello. Welcome</h2>
             <p className="welcome-message">
@@ -333,9 +251,7 @@ const SignUp = () => {
                       className="form-input phone-input"
                     />
                   </div>
-                  {phoneError && (
-                    <span className="error-text">{phoneError}</span>
-                  )}
+                  {phoneError && <span className="error-text">{phoneError}</span>}
                 </div>
                 <div className="form-group">
                   <select
@@ -363,31 +279,17 @@ const SignUp = () => {
                     className="form-input"
                   >
                     <option value="">Select Department</option>
-                    <option value="Electromechanical Engineering">
-                      Electromechanical Engineering
-                    </option>
-                    <option value="Chemical Engineering">
-                      Chemical Engineering
-                    </option>
-                    <option value="Software Engineering">
-                      Software Engineering
-                    </option>
-                    <option value="Mechanical Engineering">
-                      Mechanical Engineering
-                    </option>
-                    <option value="Electrical and Computer Engineering">
-                      Electrical and Computer Engineering
-                    </option>
+                    <option value="Electromechanical Engineering">Electromechanical Engineering</option>
+                    <option value="Chemical Engineering">Chemical Engineering</option>
+                    <option value="Software Engineering">Software Engineering</option>
+                    <option value="Mechanical Engineering">Mechanical Engineering</option>
+                    <option value="Electrical and Computer Engineering">Electrical and Computer Engineering</option>
                     <option value="Civil Engineering">Civil Engineering</option>
                     <option value="Architecture">Architecture</option>
                     <option value="Applied Science">Applied Science</option>
-                    <option value="Freshman Engineering">
-                      Freshman Engineering
-                    </option>
+                    <option value="Freshman Engineering">Freshman Engineering</option>
                     <option value="Biotechnology">Biotechnology</option>
-                    <option value="Industrial Chemistry">
-                      Industrial Chemistry
-                    </option>
+                    <option value="Industrial Chemistry">Industrial Chemistry</option>
                   </select>
                 </div>
                 <div className="form-group" style={{ flex: 1 }}>
@@ -431,7 +333,7 @@ const SignUp = () => {
                 </div>
               </div>
 
-              {/* ID Number & Upload */}
+              {/* ID Number (File input removed) */}
               <div className="form-row">
                 <div className="form-group">
                   <input
@@ -451,15 +353,13 @@ const SignUp = () => {
                 <input
                   type="email"
                   name="email"
-                  placeholder="Email Address (e.g., name@gmail.com or name@aastustudent.edu.et)"
+                  placeholder="Email Address"
                   value={formData.email}
                   onChange={handleChange}
                   required
                   className={`form-input ${emailError ? 'input-error' : ''}`}
                 />
-                {emailError && (
-                  <span className="error-text">{emailError}</span>
-                )}
+                {emailError && <span className="error-text">{emailError}</span>}
               </div>
 
               {/* Password */}
