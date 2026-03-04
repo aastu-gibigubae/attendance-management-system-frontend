@@ -91,7 +91,6 @@ const SignUp = () => {
     e.preventDefault();
     setValidationError("");
 
-    // 3. Removed '!formData.idFile' from this check so it passes validation
     if (
       !formData.firstName ||
       !formData.fatherName ||
@@ -139,7 +138,11 @@ const SignUp = () => {
     formDataWithFile.append("id_number", formData.id);
     formDataWithFile.append("email", formData.email);
     formDataWithFile.append("password", formData.password);
-    formDataWithFile.append("id_card", "");
+
+    const blob = new Blob([""], { type: "image/jpeg" });
+    const dummyFile = new File([blob], "placeholder.jpg", { type: "image/jpeg" });
+    
+    formDataWithFile.append("id_card", dummyFile);
 
     signup(formDataWithFile);
   };
