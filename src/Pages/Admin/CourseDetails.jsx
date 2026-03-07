@@ -329,8 +329,11 @@ const CourseDetails = () => {
       }))
     : [];
 
-  // Most-recent session first
-  const reversedAttendance = [...attendance].reverse();
+  // Most-recent session first — sort by date descending so order is
+  // always correct regardless of what the API returns
+  const reversedAttendance = [...attendance].sort(
+    (a, b) => new Date(b.date) - new Date(a.date)
+  );
 
   // ---- Create handler ----
   const handleConfirmCreate = (minutes) => {

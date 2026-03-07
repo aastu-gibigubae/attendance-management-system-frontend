@@ -30,6 +30,7 @@ const CourseLists = () => {
   const [editForm, setEditForm] = useState({
     course_name: "",
     description: "",
+    course_type: "regular",
     start_date: "",
     end_date: "",
     enrollment_start_date: "",
@@ -38,12 +39,16 @@ const CourseLists = () => {
     semester: "",
   });
 
+  // Derived: is the course being edited an event?
+  const isEditEvent = editForm.course_type === "event";
+
   // Transform API data to component format
   const courses = data?.success
     ? data.data.map((course) => ({
         id: course.id,
         title: course.course_name,
         description: course.description,
+        course_type: course.course_type || "regular",
         start_date: course.start_date,
         end_date: course.end_date,
         enrollment_start_date: course.enrollment_start_date,
@@ -80,11 +85,17 @@ const CourseLists = () => {
     return matchesStatus && matchesSearch && matchesYear && matchesSemester;
   });
 
+  const toDateOnly = (iso) => {
+    if (!iso) return "";
+    return new Date(iso).toISOString().slice(0, 10);
+  };
+
   const handleEdit = (course) => {
     setEditingCourse(course.id);
     setEditForm({
       course_name: course.title,
       description: course.description,
+      course_type: course.course_type || "regular",
       start_date: toDateOnly(course.start_date),
       end_date: toDateOnly(course.end_date),
       enrollment_start_date: toDateOnly(course.enrollment_start_date),
@@ -141,13 +152,36 @@ const CourseLists = () => {
   };
 
   const submitEdit = async () => {
-    // Find the original course to compare year_level
     const originalCourse = courses.find((c) => c.id === editingCourse);
-    const yearLevelChanged =
-      originalCourse &&
-      parseInt(editForm.year_level) !== parseInt(originalCourse.year_level);
 
-    // If year_level changed, check how many students will be unenrolled first
+    // Build the payload
+    const payload = {
+      course_name: editForm.course_name,
+      description: editForm.description,
+      course_type: editForm.course_type,
+      start_date: editForm.start_date,
+      end_date: editForm.end_date,
+      enrollment_start_date: editForm.enrollment_start_date,
+      enrollment_deadline: editForm.enrollment_deadline,
+    };
+
+    // Only include year_level / semester for regular courses
+    if (!isEditEvent) {
+      payload.year_level = parseInt(editForm.year_level) || null;
+      payload.semester = parseInt(editForm.semester) || null;
+    } else {
+      // Explicitly null them out when switching to event
+      payload.year_level = null;
+      payload.semester = null;
+    }
+
+    // Show unenroll warning ONLY when the course stays regular AND year_level changed
+    const wasRegular = originalCourse?.course_type !== "event";
+    const yearLevelChanged =
+      wasRegular &&
+      !isEditEvent &&
+      parseInt(editForm.year_level) !== parseInt(originalCourse?.year_level);
+
     if (yearLevelChanged) {
       let toUnenroll = [];
       try {
@@ -159,7 +193,6 @@ const CourseLists = () => {
         console.error("Failed to fetch enrolled students:", err);
       }
 
-      // Show confirmation alert with the count
       const confirmResult = await Swal.fire({
         icon: "warning",
         title: "Year Level Changed",
@@ -176,9 +209,8 @@ const CourseLists = () => {
 
       if (!confirmResult.isConfirmed) return;
 
-      // Proceed with update + unenroll
       updateCourseMutation.mutate(
-        { id: editingCourse, data: editForm },
+        { id: editingCourse, data: payload },
         {
           onSuccess: async () => {
             setEditingCourse(null);
@@ -227,9 +259,9 @@ const CourseLists = () => {
         }
       );
     } else {
-      // No year_level change — just save directly
+      // No unenroll scenario — just save
       updateCourseMutation.mutate(
-        { id: editingCourse, data: editForm },
+        { id: editingCourse, data: payload },
         {
           onSuccess: () => {
             setEditingCourse(null);
@@ -253,16 +285,12 @@ const CourseLists = () => {
     }
   };
 
-  const toDateOnly = (iso) => {
-    if (!iso) return "";
-    return new Date(iso).toISOString().slice(0, 10);
-  };
-
   const closeModal = () => {
     setEditingCourse(null);
     setEditForm({
       course_name: "",
       description: "",
+      course_type: "regular",
       start_date: "",
       end_date: "",
       enrollment_start_date: "",
@@ -363,12 +391,13 @@ const CourseLists = () => {
         )}
       </div>
 
-      {/* --- UPDATED MODAL SECTION --- */}
+      {/* Edit Modal */}
       {editingCourse && (
         <div className="modal-overlay" onClick={closeModal}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <h2 className="modal-title">Edit Course</h2>
 
+            {/* Course Name */}
             <div className="modal-form-group">
               <label className="modal-label">Course Name</label>
               <input
@@ -382,6 +411,7 @@ const CourseLists = () => {
               />
             </div>
 
+            {/* Description */}
             <div className="modal-form-group">
               <label className="modal-label">Description</label>
               <textarea
@@ -394,6 +424,50 @@ const CourseLists = () => {
               />
             </div>
 
+            {/* Course Type */}
+            <div className="modal-form-group">
+              <label className="modal-label">Course Type</label>
+              <div style={{ display: "flex", gap: "1.5rem", marginTop: "6px" }}>
+                {["regular", "event"].map((type) => (
+                  <label
+                    key={type}
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "6px",
+                      cursor: "pointer",
+                      fontWeight: editForm.course_type === type ? "700" : "400",
+                      fontSize: "14px",
+                    }}
+                  >
+                    <input
+                      type="radio"
+                      name="edit_course_type"
+                      value={type}
+                      checked={editForm.course_type === type}
+                      onChange={() =>
+                        setEditForm({
+                          ...editForm,
+                          course_type: type,
+                          // Clear year/semester when switching to event
+                          ...(type === "event"
+                            ? { year_level: "", semester: "" }
+                            : {}),
+                        })
+                      }
+                    />
+                    {type.charAt(0).toUpperCase() + type.slice(1)}
+                  </label>
+                ))}
+              </div>
+              {isEditEvent && (
+                <p style={{ margin: "4px 0 0", fontSize: "12px", color: "#6b7280" }}>
+                  Event courses are visible to all students — no year or semester required.
+                </p>
+              )}
+            </div>
+
+            {/* Dates */}
             <div className="modal-date-row">
               <div className="modal-form-group">
                 <label className="modal-label">Start Date</label>
@@ -452,53 +526,62 @@ const CourseLists = () => {
               </div>
             </div>
 
-            <div className="modal-date-row">
-              <div className="modal-form-group">
-                <label className="modal-label">Year Level *</label>
-                <select
-                  className="modal-input"
-                  value={editForm.year_level}
-                  onChange={(e) =>
-                    setEditForm({ ...editForm, year_level: parseInt(e.target.value) || "" })
-                  }
-                  required
-                >
-                  <option value="">Select Year</option>
-                  <option value="1">Year 1</option>
-                  <option value="2">Year 2</option>
-                  <option value="3">Year 3</option>
-                  <option value="4">Year 4</option>
-                  <option value="5">Year 5</option>
-                </select>
-              </div>
+            {/* Year Level & Semester — hidden for event courses */}
+            {!isEditEvent && (
+              <div className="modal-date-row">
+                <div className="modal-form-group">
+                  <label className="modal-label">Year Level *</label>
+                  <select
+                    className="modal-input"
+                    value={editForm.year_level}
+                    onChange={(e) =>
+                      setEditForm({
+                        ...editForm,
+                        year_level: parseInt(e.target.value) || "",
+                      })
+                    }
+                    required
+                  >
+                    <option value="">Select Year</option>
+                    <option value="1">Year 1</option>
+                    <option value="2">Year 2</option>
+                    <option value="3">Year 3</option>
+                    <option value="4">Year 4</option>
+                    <option value="5">Year 5</option>
+                  </select>
+                </div>
 
-              <div className="modal-form-group">
-                <label className="modal-label">Semester *</label>
-                <select
-                  className="modal-input"
-                  value={editForm.semester}
-                  onChange={(e) =>
-                    setEditForm({ ...editForm, semester: parseInt(e.target.value) || "" })
-                  }
-                  required
-                >
-                  <option value="">Select Semester</option>
-                  <option value="1">Semester 1</option>
-                  <option value="2">Semester 2</option>
-                </select>
+                <div className="modal-form-group">
+                  <label className="modal-label">Semester *</label>
+                  <select
+                    className="modal-input"
+                    value={editForm.semester}
+                    onChange={(e) =>
+                      setEditForm({
+                        ...editForm,
+                        semester: parseInt(e.target.value) || "",
+                      })
+                    }
+                    required
+                  >
+                    <option value="">Select Semester</option>
+                    <option value="1">Semester 1</option>
+                    <option value="2">Semester 2</option>
+                  </select>
+                </div>
               </div>
-            </div>
+            )}
 
             <div className="modal-actions">
               <button className="btn-cancel" onClick={closeModal}>
                 Cancel
               </button>
-              <button 
-                className="btn-save" 
+              <button
+                className="btn-save"
                 onClick={submitEdit}
                 disabled={updateCourseMutation.isPending}
               >
-                {updateCourseMutation.isPending ? 'Saving...' : 'Save Changes'}
+                {updateCourseMutation.isPending ? "Saving..." : "Save Changes"}
               </button>
             </div>
           </div>
