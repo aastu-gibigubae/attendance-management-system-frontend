@@ -58,7 +58,7 @@ const AdminSidebar = ({ collapsed, setCollapsed }) => {
     <aside className={`admin-sidebar ${collapsed ? "collapsed" : ""}`}>
       {/* Header */}
       <div className="sidebar-header">
-        {!collapsed && <span className="sidebar-title">GIGI GUBAE</span>}
+        {!collapsed && <span className="sidebar-title">GEBI GUBAE</span>}
 
         <button
           className="collapse-btn"
