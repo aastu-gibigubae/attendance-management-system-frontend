@@ -155,8 +155,8 @@ const CourseCard = ({
           aria-label="View course"
           title="View"
         >
-          <span className="btn-text">View</span>
           <Eye size={18} />
+          <span className="btn-text">View</span>
         </button>
       </div>
     </div>
