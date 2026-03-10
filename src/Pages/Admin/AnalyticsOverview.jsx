@@ -43,7 +43,6 @@ import {
 } from "chart.js";
 import {
   BarChart3,
-  RefreshCcw,
   TrendingUp,
   TrendingDown,
   Minus,
@@ -81,7 +80,7 @@ const AnalyticsOverview = () => {
     isLoading: dailyLoading,
     error: dailyError,
     refetch: refetchDaily,
-  } = useDailyOverview();
+  } = useDailyOverview(); // refetchDaily still used in ErrorPage onRetry
   const { data: trendData, isLoading: trendLoading } = useAttendanceTrend();
   const { data: summaryData, isLoading: summaryLoading } = useCoursesSummary();
 
@@ -125,9 +124,6 @@ const AnalyticsOverview = () => {
   // Get students list for dropdown
   const { data: studentsData } = useStudents();
 
-  const handleRefresh = () => {
-    refetchDaily();
-  };
 
   const getTrendIcon = (trend) => {
     if (!trend) return <Minus size={16} />;
@@ -1078,9 +1074,7 @@ const AnalyticsOverview = () => {
           <BarChart3 size={24} />
           <h1>Analytics Dashboard</h1>
         </div>
-        <button className="refresh-btn" onClick={handleRefresh}>
-          <RefreshCcw size={16} /> Refresh
-        </button>
+
       </div>
 
       {/* Tabs */}
