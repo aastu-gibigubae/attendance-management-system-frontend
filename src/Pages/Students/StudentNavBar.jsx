@@ -1,4 +1,5 @@
 "use client"
+import { useState, useCallback } from "react"
 import { useNavigate } from "react-router-dom"
 import { useQueryClient } from "@tanstack/react-query"
 import { useLogout } from "../../hooks/useAuth"
@@ -29,6 +30,14 @@ const StudentNavBar = () => {
     logoutMutation.mutate()
   }
 
+  const [isRefreshing, setIsRefreshing] = useState(false)
+
+  const handleRefresh = useCallback(() => {
+    setIsRefreshing(true)
+    queryClient.invalidateQueries()
+    setTimeout(() => setIsRefreshing(false), 1000)
+  }, [queryClient])
+
   return (
     <nav className="student-navbar">
       <div className="navbar-container">
@@ -37,6 +46,31 @@ const StudentNavBar = () => {
         </div>
         
         <div className="navbar-actions">
+          <button
+            className={`nav-refresh-btn${isRefreshing ? " refreshing" : ""}`}
+            onClick={handleRefresh}
+            disabled={isRefreshing}
+            title={isRefreshing ? "Refreshing..." : "Refresh"}
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className={isRefreshing ? "spin" : ""}
+            >
+              <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" />
+              <path d="M21 3v5h-5" />
+              <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" />
+              <path d="M8 16H3v5" />
+            </svg>
+          </button>
+
           <button 
             className="settings-btn" 
             onClick={() => navigate("/student/settings")}
