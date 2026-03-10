@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Eye, EyeOff } from "lucide-react";
-import { useSignup } from "../../hooks/useAuth";
+import { useAdminRegisterStudent } from "../../hooks/useAdmin";
 import "../Auth.css";
 import ErrorPage from "../../Components/ErrorPage";
 import Swal from "sweetalert2";
@@ -28,8 +28,9 @@ const RegisterStudent = () => {
   const [phoneError, setPhoneError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
 
-  // Use React Query mutation hook for signup
-  const { mutate: signup, isPending, error, isError } = useSignup({
+  // Use admin-specific registration hook — does NOT set auth cookies,
+  // so the admin's session is preserved after registering a student.
+  const { mutate: adminRegisterStudent, isPending, error, isError } = useAdminRegisterStudent({
     onSuccess: () => {
       Swal.fire({
         icon: "success",
@@ -212,8 +213,8 @@ const RegisterStudent = () => {
     // Append this valid file to FormData
     formDataWithFile.append("id_card", dummyFile); 
 
-    // Submit
-    signup(formDataWithFile);
+    // Submit via admin-only endpoint (no auth cookies set)
+    adminRegisterStudent(formDataWithFile);
   };
 
   return (
