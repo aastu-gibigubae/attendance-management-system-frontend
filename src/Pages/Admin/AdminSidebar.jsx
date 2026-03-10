@@ -1,5 +1,5 @@
 import { useNavigate, useLocation } from "react-router-dom";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   Menu,
   BookOpen,
@@ -52,9 +52,13 @@ const AdminSidebar = ({ collapsed, setCollapsed }) => {
     logoutMutation.mutate();
   };
 
-  const handleRefresh = () => {
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  const handleRefresh = useCallback(() => {
+    setIsRefreshing(true);
     queryClient.invalidateQueries();
-  };
+    setTimeout(() => setIsRefreshing(false), 1000);
+  }, [queryClient]);
 
   // Helper to check active state
   const isActive = (path) => location.pathname === path;
@@ -139,12 +143,13 @@ const AdminSidebar = ({ collapsed, setCollapsed }) => {
       {/* Footer */}
       <div className="sidebar-footer">
         <button
-          className="refresh-btn"
+          className={`refresh-btn${isRefreshing ? " refreshing" : ""}`}
           onClick={handleRefresh}
-          title={collapsed ? "Refresh" : ""}
+          disabled={isRefreshing}
+          title={collapsed ? (isRefreshing ? "Refreshing..." : "Refresh") : ""}
         >
-          <RefreshCw size={20} />
-          {!collapsed && <span>Refresh</span>}
+          <RefreshCw size={20} className={isRefreshing ? "spin" : ""} />
+          {!collapsed && <span>{isRefreshing ? "Refreshing..." : "Refresh"}</span>}
         </button>
         <button
           className="logout-btn"
