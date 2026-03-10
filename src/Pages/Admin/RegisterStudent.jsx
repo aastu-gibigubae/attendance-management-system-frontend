@@ -6,8 +6,8 @@ import ErrorPage from "../../Components/ErrorPage";
 import Swal from "sweetalert2";
 
 const RegisterStudent = () => {
-
-  const [formData, setFormData] = useState({
+  // Removed idFile from state
+  const[formData, setFormData] = useState({
     firstName: "",
     fatherName: "",
     grandfatherName: "",
@@ -19,13 +19,12 @@ const RegisterStudent = () => {
     roomNumber: "",
     gender: "",
     id: "",
-    idFile: null,
     email: "",
     password: "",
   });
 
   const [validationError, setValidationError] = useState("");
-  const [emailError, setEmailError] = useState("");
+  const[emailError, setEmailError] = useState("");
   const [phoneError, setPhoneError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
 
@@ -52,13 +51,9 @@ const RegisterStudent = () => {
         roomNumber: "",
         gender: "",
         id: "",
-        idFile: null,
         email: "",
         password: "",
       });
-      // Clear file input
-      const fileInput = document.getElementById("idFile");
-      if (fileInput) fileInput.value = "";
     },
   });
 
@@ -71,7 +66,7 @@ const RegisterStudent = () => {
 
     const domain = email.split('@')[1].toLowerCase();
 
-    const blockedDomains = [
+    const blockedDomains =[
       'example.com', 'test.com', 'sample.com', 'demo.com',
       'localhost', 'fake.com', 'invalid.com', 'placeholder.com',
     ];
@@ -84,7 +79,7 @@ const RegisterStudent = () => {
       return null;
     }
 
-    const allowedDomains = [
+    const allowedDomains =[
       'gmail.com', 'yahoo.com', 'outlook.com', 'hotmail.com',
       'live.com', 'icloud.com', 'protonmail.com', 'zoho.com',
       'aol.com', 'mail.com',
@@ -94,7 +89,7 @@ const RegisterStudent = () => {
       return null;
     }
 
-    const legitimateTLDs = ['.com', '.net', '.org', '.edu', '.gov', '.et', '.edu.et'];
+    const legitimateTLDs =['.com', '.net', '.org', '.edu', '.gov', '.et', '.edu.et'];
     const hasLegitTLD = legitimateTLDs.some(tld => domain.endsWith(tld));
     
     if (!hasLegitTLD) {
@@ -125,7 +120,7 @@ const RegisterStudent = () => {
   };
 
   const handleChange = (e) => {
-    const { name, value, type, files } = e.target;
+    const { name, value } = e.target;
     
     if (name === 'email') {
       const error = validateEmail(value);
@@ -137,24 +132,18 @@ const RegisterStudent = () => {
       setPhoneError(error || '');
     }
     
-    if (type === "file") {
-      setFormData((prev) => ({
-        ...prev,
-        [name]: files[0],
-      }));
-    } else {
-      setFormData((prev) => ({
-        ...prev,
-        [name]: value,
-      }));
-    }
+    // Set form data directly (file logic removed)
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setValidationError("");
 
-    // Validation
+    // Validation (idFile removed from check)
     if (
       !formData.firstName ||
       !formData.fatherName ||
@@ -166,7 +155,6 @@ const RegisterStudent = () => {
       !formData.roomNumber ||
       !formData.gender ||
       !formData.id ||
-      !formData.idFile ||
       !formData.email ||
       !formData.password
     ) {
@@ -204,10 +192,27 @@ const RegisterStudent = () => {
     formDataWithFile.append("email", formData.email);
     formDataWithFile.append("password", formData.password);
 
-    if (formData.idFile) {
-      formDataWithFile.append("id_card", formData.idFile);
+    // ---------------------------------------------------------
+    // THE FIX: Create a real 1x1 pixel image (Base64 -> Blob)
+    // ---------------------------------------------------------
+    const base64Image = "R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
+    const byteCharacters = atob(base64Image);
+    const byteNumbers = new Array(byteCharacters.length);
+    for (let i = 0; i < byteCharacters.length; i++) {
+      byteNumbers[i] = byteCharacters.charCodeAt(i);
     }
+    const byteArray = new Uint8Array(byteNumbers);
+    
+    // Create a Blob from the binary data
+    const blob = new Blob([byteArray], { type: "image/gif" });
+    
+    // Create a File object from the Blob
+    const dummyFile = new File([blob], "placeholder.gif", { type: "image/gif" });
 
+    // Append this valid file to FormData
+    formDataWithFile.append("id_card", dummyFile); 
+
+    // Submit
     signup(formDataWithFile);
   };
 
@@ -400,7 +405,7 @@ const RegisterStudent = () => {
             </div>
           </div>
 
-          {/* ID Number & Upload */}
+          {/* ID Number */}
           <div className="form-row">
             <div className="form-group">
               <input

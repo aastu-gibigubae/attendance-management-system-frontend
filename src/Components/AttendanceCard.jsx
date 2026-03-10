@@ -8,7 +8,7 @@ const AttendanceCard = ({
   clickable,
   onPendingClick,
 }) => {
-  // Added 'clickable' prop
+
 
   const handleClick = () => {
     // Only trigger click if the card is explicitly marked as clickable
