@@ -9,6 +9,7 @@ import {
   LogOut,
   BarChart3,
   UserPlus,
+  RefreshCw,
 } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useLogout } from "../../hooks/useAuth";
@@ -49,6 +50,10 @@ const AdminSidebar = ({ collapsed, setCollapsed }) => {
 
   const handleLogout = () => {
     logoutMutation.mutate();
+  };
+
+  const handleRefresh = () => {
+    queryClient.invalidateQueries();
   };
 
   // Helper to check active state
@@ -133,6 +138,14 @@ const AdminSidebar = ({ collapsed, setCollapsed }) => {
 
       {/* Footer */}
       <div className="sidebar-footer">
+        <button
+          className="refresh-btn"
+          onClick={handleRefresh}
+          title={collapsed ? "Refresh" : ""}
+        >
+          <RefreshCw size={20} />
+          {!collapsed && <span>Refresh</span>}
+        </button>
         <button
           className="logout-btn"
           onClick={handleLogout}
