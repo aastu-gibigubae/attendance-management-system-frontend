@@ -42,7 +42,7 @@ const StudentNavBar = () => {
     <nav className="student-navbar">
       <div className="navbar-container">
         <div className="navbar-logo">
-          <span className="logo-text">GEBI GUBAE</span>
+          <span className="logo-text">GIBI GUBAE</span>
         </div>
         
         <div className="navbar-actions">
