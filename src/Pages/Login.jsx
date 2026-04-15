@@ -52,7 +52,7 @@ const Login = () => {
           <div className="welcome-card">
             <div className="logo-circle">
               <span className="logo-text">
-                GEBI
+                GIBI
                 <br />
                 GUBAE
               </span>
