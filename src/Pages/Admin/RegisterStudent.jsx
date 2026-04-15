@@ -363,6 +363,7 @@ const RegisterStudent = () => {
                 <option value="Freshman Engineering">Freshman Engineering</option>
                 <option value="Biotechnology">Biotechnology</option>
                 <option value="Industrial Chemistry">Industrial Chemistry</option>
+                <option value="Mining">Mining</option>
               </select>
             </div>
             <div className="form-group" style={{ flex: 1 }}>
