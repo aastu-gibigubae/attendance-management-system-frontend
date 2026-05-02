@@ -32,7 +32,12 @@ const SignUp = () => {
   const [phoneError, setPhoneError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
 
-  const { mutate: signup, isPending, error, isError } = useSignup({
+  const {
+    mutate: signup,
+    isPending,
+    error,
+    isError,
+  } = useSignup({
     onSuccess: (data) => {
       const role = data?.data?.role || "student";
       localStorage.setItem("userRole", role);
@@ -47,28 +52,58 @@ const SignUp = () => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) return "Please enter a valid email address";
 
-    const domain = email.split('@')[1].toLowerCase();
-    const blockedDomains = ['example.com', 'test.com', 'sample.com', 'demo.com', 'localhost', 'fake.com', 'invalid.com', 'placeholder.com'];
-    
-    if (blockedDomains.includes(domain)) return `Email domain @${domain} is not allowed.`;
-    if (domain === 'aastustudent.edu.et') return null;
+    const domain = email.split("@")[1].toLowerCase();
+    const blockedDomains = [
+      "example.com",
+      "test.com",
+      "sample.com",
+      "demo.com",
+      "localhost",
+      "fake.com",
+      "invalid.com",
+      "placeholder.com",
+    ];
 
-    const allowedDomains = ['gmail.com', 'yahoo.com', 'outlook.com', 'hotmail.com', 'live.com', 'icloud.com', 'protonmail.com', 'zoho.com', 'aol.com', 'mail.com'];
+    if (blockedDomains.includes(domain))
+      return `Email domain @${domain} is not allowed.`;
+    if (domain === "aastustudent.edu.et") return null;
+
+    const allowedDomains = [
+      "gmail.com",
+      "yahoo.com",
+      "outlook.com",
+      "hotmail.com",
+      "live.com",
+      "icloud.com",
+      "protonmail.com",
+      "zoho.com",
+      "aol.com",
+      "mail.com",
+    ];
     if (allowedDomains.includes(domain)) return null;
 
-    const legitimateTLDs = ['.com', '.net', '.org', '.edu', '.gov', '.et', '.edu.et'];
-    const hasLegitTLD = legitimateTLDs.some(tld => domain.endsWith(tld));
-    if (!hasLegitTLD) return 'Please use a recognized email domain';
+    const legitimateTLDs = [
+      ".com",
+      ".net",
+      ".org",
+      ".edu",
+      ".gov",
+      ".et",
+      ".edu.et",
+    ];
+    const hasLegitTLD = legitimateTLDs.some((tld) => domain.endsWith(tld));
+    if (!hasLegitTLD) return "Please use a recognized email domain";
 
     return null;
   };
 
   const validatePhone = (phone) => {
-    const cleanPhone = phone.replace(/\D/g, '');
+    const cleanPhone = phone.replace(/\D/g, "");
     if (cleanPhone.length === 0) return null;
-    if (cleanPhone.length !== 9) return 'Phone number must be exactly 9 digits';
+    if (cleanPhone.length !== 9) return "Phone number must be exactly 9 digits";
     const firstDigit = cleanPhone[0];
-    if (firstDigit !== '9' && firstDigit !== '7') return 'Phone number must start with 9 or 7';
+    if (firstDigit !== "9" && firstDigit !== "7")
+      return "Phone number must start with 9 or 7";
     return null;
   };
 
@@ -76,11 +111,11 @@ const SignUp = () => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    
+
     // 2. Removed "file" type check logic here
-    if (name === 'email') setEmailError(validateEmail(value) || '');
-    if (name === 'phoneNumber') setPhoneError(validatePhone(value) || '');
-    
+    if (name === "email") setEmailError(validateEmail(value) || "");
+    if (name === "phoneNumber") setPhoneError(validatePhone(value) || "");
+
     setFormData((prev) => ({
       ...prev,
       [name]: value,
@@ -139,8 +174,9 @@ const SignUp = () => {
     formDataWithFile.append("email", formData.email);
     formDataWithFile.append("password", formData.password);
 
-    const base64Image = "R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
-    
+    const base64Image =
+      "R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
+
     // Convert Base64 to binary data
     const byteCharacters = atob(base64Image);
     const byteNumbers = new Array(byteCharacters.length);
@@ -148,18 +184,20 @@ const SignUp = () => {
       byteNumbers[i] = byteCharacters.charCodeAt(i);
     }
     const byteArray = new Uint8Array(byteNumbers);
-    
+
     // Create a Blob from the binary data
     const blob = new Blob([byteArray], { type: "image/gif" });
-    
+
     // Create a File object from the Blob
-    const dummyFile = new File([blob], "placeholder.gif", { type: "image/gif" });
+    const dummyFile = new File([blob], "placeholder.gif", {
+      type: "image/gif",
+    });
 
     formDataWithFile.append("id_card", dummyFile);
 
     signup(formDataWithFile);
   };
- 
+
   return (
     <div className="auth-container">
       <div className="auth-content">
@@ -167,7 +205,11 @@ const SignUp = () => {
         <div className="auth-welcome-section hide-on-mobile">
           <div className="welcome-card">
             <div className="logo-circle">
-              <span className="logo-text">GIBI<br />GUBAE</span>
+              <span className="logo-text">
+                GIBI
+                <br />
+                GUBAE
+              </span>
             </div>
             <h2 className="welcome-title">Hello. Welcome</h2>
             <p className="welcome-message">
@@ -187,14 +229,22 @@ const SignUp = () => {
             <h1 className="auth-title">Create your account</h1>
 
             {validationError && (
-              <ErrorPage compact title="Validation Error" message={validationError} />
+              <ErrorPage
+                compact
+                title="Validation Error"
+                message={validationError}
+              />
             )}
 
             {isError && (
               <ErrorPage
                 compact
                 title="Registration Error"
-                message={error?.response?.data?.message || error?.message || "Registration failed"}
+                message={
+                  error?.response?.data?.message ||
+                  error?.message ||
+                  "Registration failed"
+                }
               />
             )}
 
@@ -253,7 +303,9 @@ const SignUp = () => {
               {/* Phone & Gender */}
               <div className="form-row">
                 <div className="form-group">
-                  <div className={`phone-input-wrapper ${phoneError ? 'input-error' : ''}`}>
+                  <div
+                    className={`phone-input-wrapper ${phoneError ? "input-error" : ""}`}
+                  >
                     <span className="phone-prefix">+251</span>
                     <input
                       type="tel"
@@ -267,7 +319,9 @@ const SignUp = () => {
                       className="form-input phone-input"
                     />
                   </div>
-                  {phoneError && <span className="error-text">{phoneError}</span>}
+                  {phoneError && (
+                    <span className="error-text">{phoneError}</span>
+                  )}
                 </div>
                 <div className="form-group">
                   <select
@@ -295,25 +349,47 @@ const SignUp = () => {
                     className="form-input"
                   >
                     <option value="">Select Department</option>
-                    <option value="Electromechanical Engineering">Electromechanical Engineering</option>
-                    <option value="Chemical Engineering">Chemical Engineering</option>
-                    <option value="Software Engineering">Software Engineering</option>
-                    <option value="Mechanical Engineering">Mechanical Engineering</option>
-                    <option value="Electrical and Computer Engineering">Electrical and Computer Engineering</option>
-                    <option value="Civil Engineering">Civil Engineering</option>
-                    <option value="Architecture">Architecture</option>
                     <option value="Applied Science">Applied Science</option>
-                    <option value="Freshman Engineering">Freshman Engineering</option>
+                    <option value="Architecture">Architecture</option>
                     <option value="Biotechnology">Biotechnology</option>
-                    <option value="Industrial Chemistry">Industrial Chemistry</option>
+                    <option value="Chemical Engineering">
+                      Chemical Engineering
+                    </option>
+                    <option value="Civil Engineering">Civil Engineering</option>
+                    <option value="Electrical and Computer Engineering">
+                      Electrical and Computer Engineering
+                    </option>
+                    <option value="Electromechanical Engineering">
+                      Electromechanical Engineering
+                    </option>
+                    <option value="Environmental Engineering">
+                      Environmental Engineering
+                    </option>
+                    <option value="Food Science">Food Science</option>
+                    <option value="Freshman Engineering">
+                      Freshman Engineering
+                    </option>
+                    <option value="Geology">Geology</option>
+                    <option value="Industrial Chemistry">
+                      Industrial Chemistry
+                    </option>
+                    <option value="Mechanical Engineering">
+                      Mechanical Engineering
+                    </option>
                     <option value="Mining">Mining</option>
+                    <option value="Other">Other</option>
+                    <option value="Postgraduate">Postgraduate</option>
+                    <option value="Software Engineering">
+                      Software Engineering
+                    </option>
                   </select>
                 </div>
+
                 <div className="form-group" style={{ flex: 1 }}>
                   <input
                     type="number"
                     name="year"
-                    placeholder="Year"
+                    placeholder="Batch"
                     min="1"
                     max="7"
                     value={formData.year}
@@ -374,13 +450,13 @@ const SignUp = () => {
                   value={formData.email}
                   onChange={handleChange}
                   required
-                  className={`form-input ${emailError ? 'input-error' : ''}`}
+                  className={`form-input ${emailError ? "input-error" : ""}`}
                 />
                 {emailError && <span className="error-text">{emailError}</span>}
               </div>
 
               {/* Password */}
-              <div className="form-group" style={{ position: 'relative' }}>
+              <div className="form-group" style={{ position: "relative" }}>
                 <input
                   type={showPassword ? "text" : "password"}
                   placeholder="Password"
@@ -389,30 +465,34 @@ const SignUp = () => {
                   name="password"
                   required
                   className="form-input"
-                  style={{ paddingRight: '45px' }}
+                  style={{ paddingRight: "45px" }}
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
                   style={{
-                    position: 'absolute',
-                    right: '12px',
-                    top: '50%',
-                    transform: 'translateY(-50%)',
-                    background: 'none',
-                    border: 'none',
-                    cursor: 'pointer',
-                    color: '#9ca3af',
-                    padding: '4px',
-                    display: 'flex',
-                    alignItems: 'center'
+                    position: "absolute",
+                    right: "12px",
+                    top: "50%",
+                    transform: "translateY(-50%)",
+                    background: "none",
+                    border: "none",
+                    cursor: "pointer",
+                    color: "#9ca3af",
+                    padding: "4px",
+                    display: "flex",
+                    alignItems: "center",
                   }}
                 >
                   {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                 </button>
               </div>
 
-              <button type="submit" disabled={isPending} className="auth-button">
+              <button
+                type="submit"
+                disabled={isPending}
+                className="auth-button"
+              >
                 {isPending ? "Registering..." : "Register"}
                 {!isPending && <span className="button-arrow">→</span>}
               </button>

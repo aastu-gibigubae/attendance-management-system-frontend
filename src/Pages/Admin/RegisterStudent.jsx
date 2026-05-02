@@ -7,7 +7,7 @@ import Swal from "sweetalert2";
 
 const RegisterStudent = () => {
   // Removed idFile from state
-  const[formData, setFormData] = useState({
+  const [formData, setFormData] = useState({
     firstName: "",
     fatherName: "",
     grandfatherName: "",
@@ -24,13 +24,18 @@ const RegisterStudent = () => {
   });
 
   const [validationError, setValidationError] = useState("");
-  const[emailError, setEmailError] = useState("");
+  const [emailError, setEmailError] = useState("");
   const [phoneError, setPhoneError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
 
   // Use admin-specific registration hook — does NOT set auth cookies,
   // so the admin's session is preserved after registering a student.
-  const { mutate: adminRegisterStudent, isPending, error, isError } = useAdminRegisterStudent({
+  const {
+    mutate: adminRegisterStudent,
+    isPending,
+    error,
+    isError,
+  } = useAdminRegisterStudent({
     onSuccess: () => {
       Swal.fire({
         icon: "success",
@@ -65,36 +70,57 @@ const RegisterStudent = () => {
       return "Please enter a valid email address";
     }
 
-    const domain = email.split('@')[1].toLowerCase();
+    const domain = email.split("@")[1].toLowerCase();
 
-    const blockedDomains =[
-      'example.com', 'test.com', 'sample.com', 'demo.com',
-      'localhost', 'fake.com', 'invalid.com', 'placeholder.com',
+    const blockedDomains = [
+      "example.com",
+      "test.com",
+      "sample.com",
+      "demo.com",
+      "localhost",
+      "fake.com",
+      "invalid.com",
+      "placeholder.com",
     ];
 
     if (blockedDomains.includes(domain)) {
       return `Email domain @${domain} is not allowed. Please use a real email address.`;
     }
 
-    if (domain === 'aastustudent.edu.et') {
+    if (domain === "aastustudent.edu.et") {
       return null;
     }
 
-    const allowedDomains =[
-      'gmail.com', 'yahoo.com', 'outlook.com', 'hotmail.com',
-      'live.com', 'icloud.com', 'protonmail.com', 'zoho.com',
-      'aol.com', 'mail.com',
+    const allowedDomains = [
+      "gmail.com",
+      "yahoo.com",
+      "outlook.com",
+      "hotmail.com",
+      "live.com",
+      "icloud.com",
+      "protonmail.com",
+      "zoho.com",
+      "aol.com",
+      "mail.com",
     ];
 
     if (allowedDomains.includes(domain)) {
       return null;
     }
 
-    const legitimateTLDs =['.com', '.net', '.org', '.edu', '.gov', '.et', '.edu.et'];
-    const hasLegitTLD = legitimateTLDs.some(tld => domain.endsWith(tld));
-    
+    const legitimateTLDs = [
+      ".com",
+      ".net",
+      ".org",
+      ".edu",
+      ".gov",
+      ".et",
+      ".edu.et",
+    ];
+    const hasLegitTLD = legitimateTLDs.some((tld) => domain.endsWith(tld));
+
     if (!hasLegitTLD) {
-      return 'Please use a recognized email domain';
+      return "Please use a recognized email domain";
     }
 
     return null;
@@ -102,37 +128,37 @@ const RegisterStudent = () => {
 
   // Phone number validation function
   const validatePhone = (phone) => {
-    const cleanPhone = phone.replace(/\D/g, '');
-    
+    const cleanPhone = phone.replace(/\D/g, "");
+
     if (cleanPhone.length === 0) {
       return null;
     }
-    
+
     if (cleanPhone.length !== 9) {
-      return 'Phone number must be exactly 9 digits';
+      return "Phone number must be exactly 9 digits";
     }
-    
+
     const firstDigit = cleanPhone[0];
-    if (firstDigit !== '9' && firstDigit !== '7') {
-      return 'Phone number must start with 9 or 7 (e.g., 912345678 or 712345678)';
+    if (firstDigit !== "9" && firstDigit !== "7") {
+      return "Phone number must start with 9 or 7 (e.g., 912345678 or 712345678)";
     }
-    
+
     return null;
   };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    
-    if (name === 'email') {
+
+    if (name === "email") {
       const error = validateEmail(value);
-      setEmailError(error || '');
+      setEmailError(error || "");
     }
-    
-    if (name === 'phoneNumber') {
+
+    if (name === "phoneNumber") {
       const error = validatePhone(value);
-      setPhoneError(error || '');
+      setPhoneError(error || "");
     }
-    
+
     // Set form data directly (file logic removed)
     setFormData((prev) => ({
       ...prev,
@@ -196,60 +222,77 @@ const RegisterStudent = () => {
     // ---------------------------------------------------------
     // THE FIX: Create a real 1x1 pixel image (Base64 -> Blob)
     // ---------------------------------------------------------
-    const base64Image = "R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
+    const base64Image =
+      "R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
     const byteCharacters = atob(base64Image);
     const byteNumbers = new Array(byteCharacters.length);
     for (let i = 0; i < byteCharacters.length; i++) {
       byteNumbers[i] = byteCharacters.charCodeAt(i);
     }
     const byteArray = new Uint8Array(byteNumbers);
-    
+
     // Create a Blob from the binary data
     const blob = new Blob([byteArray], { type: "image/gif" });
-    
+
     // Create a File object from the Blob
-    const dummyFile = new File([blob], "placeholder.gif", { type: "image/gif" });
+    const dummyFile = new File([blob], "placeholder.gif", {
+      type: "image/gif",
+    });
 
     // Append this valid file to FormData
-    formDataWithFile.append("id_card", dummyFile); 
+    formDataWithFile.append("id_card", dummyFile);
 
     // Submit via admin-only endpoint (no auth cookies set)
     adminRegisterStudent(formDataWithFile);
   };
 
   return (
-    <div style={{ maxWidth: '900px', margin: '0 auto', padding: '20px' }}>
-      <div style={{ 
-        background: 'white', 
-        borderRadius: '12px', 
-        boxShadow: '0 2px 8px rgba(0,0,0,0.1)', 
-        padding: '32px' 
-      }}>
-        <h1 style={{ 
-          fontSize: '24px', 
-          fontWeight: '700', 
-          marginBottom: '8px',
-          color: '#1f2937'
-        }}>
+    <div style={{ maxWidth: "900px", margin: "0 auto", padding: "20px" }}>
+      <div
+        style={{
+          background: "white",
+          borderRadius: "12px",
+          boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+          padding: "32px",
+        }}
+      >
+        <h1
+          style={{
+            fontSize: "24px",
+            fontWeight: "700",
+            marginBottom: "8px",
+            color: "#1f2937",
+          }}
+        >
           Register New Student
         </h1>
-        <p style={{ 
-          color: '#6b7280', 
-          marginBottom: '24px',
-          fontSize: '14px'
-        }}>
+        <p
+          style={{
+            color: "#6b7280",
+            marginBottom: "24px",
+            fontSize: "14px",
+          }}
+        >
           Fill in the student information to create a new account
         </p>
 
         {validationError && (
-          <ErrorPage compact title="Validation Error" message={validationError} />
+          <ErrorPage
+            compact
+            title="Validation Error"
+            message={validationError}
+          />
         )}
 
         {isError && (
           <ErrorPage
             compact
             title="Registration Error"
-            message={error?.response?.data?.message || error?.message || "Registration failed"}
+            message={
+              error?.response?.data?.message ||
+              error?.message ||
+              "Registration failed"
+            }
           />
         )}
 
@@ -308,7 +351,9 @@ const RegisterStudent = () => {
           {/* Phone & Gender */}
           <div className="form-row">
             <div className="form-group">
-              <div className={`phone-input-wrapper ${phoneError ? 'input-error' : ''}`}>
+              <div
+                className={`phone-input-wrapper ${phoneError ? "input-error" : ""}`}
+              >
                 <span className="phone-prefix">+251</span>
                 <input
                   type="tel"
@@ -322,9 +367,7 @@ const RegisterStudent = () => {
                   className="form-input phone-input"
                 />
               </div>
-              {phoneError && (
-                <span className="error-text">{phoneError}</span>
-              )}
+              {phoneError && <span className="error-text">{phoneError}</span>}
             </div>
             <div className="form-group">
               <select
@@ -352,25 +395,47 @@ const RegisterStudent = () => {
                 className="form-input"
               >
                 <option value="">Select Department</option>
-                <option value="Electromechanical Engineering">Electromechanical Engineering</option>
-                <option value="Chemical Engineering">Chemical Engineering</option>
-                <option value="Software Engineering">Software Engineering</option>
-                <option value="Mechanical Engineering">Mechanical Engineering</option>
-                <option value="Electrical and Computer Engineering">Electrical and Computer Engineering</option>
-                <option value="Civil Engineering">Civil Engineering</option>
-                <option value="Architecture">Architecture</option>
                 <option value="Applied Science">Applied Science</option>
-                <option value="Freshman Engineering">Freshman Engineering</option>
+                <option value="Architecture">Architecture</option>
                 <option value="Biotechnology">Biotechnology</option>
-                <option value="Industrial Chemistry">Industrial Chemistry</option>
+                <option value="Chemical Engineering">
+                  Chemical Engineering
+                </option>
+                <option value="Civil Engineering">Civil Engineering</option>
+                <option value="Electrical and Computer Engineering">
+                  Electrical and Computer Engineering
+                </option>
+                <option value="Electromechanical Engineering">
+                  Electromechanical Engineering
+                </option>
+                <option value="Environmental Engineering">
+                  Environmental Engineering
+                </option>
+                <option value="Food Science">Food Science</option>
+                <option value="Freshman Engineering">
+                  Freshman Engineering
+                </option>
+                <option value="Geology">Geology</option>
+                <option value="Industrial Chemistry">
+                  Industrial Chemistry
+                </option>
+                <option value="Mechanical Engineering">
+                  Mechanical Engineering
+                </option>
                 <option value="Mining">Mining</option>
+                <option value="Other">Other</option>
+                <option value="Postgraduate">Postgraduate</option>
+                <option value="Software Engineering">
+                  Software Engineering
+                </option>
               </select>
             </div>
+
             <div className="form-group" style={{ flex: 1 }}>
               <input
                 type="number"
                 name="year"
-                placeholder="Year"
+                placeholder="Batch"
                 min="1"
                 max="7"
                 value={formData.year}
@@ -431,15 +496,13 @@ const RegisterStudent = () => {
               value={formData.email}
               onChange={handleChange}
               required
-              className={`form-input ${emailError ? 'input-error' : ''}`}
+              className={`form-input ${emailError ? "input-error" : ""}`}
             />
-            {emailError && (
-              <span className="error-text">{emailError}</span>
-            )}
+            {emailError && <span className="error-text">{emailError}</span>}
           </div>
 
           {/* Password */}
-          <div className="form-group" style={{ position: 'relative' }}>
+          <div className="form-group" style={{ position: "relative" }}>
             <input
               type={showPassword ? "text" : "password"}
               name="password"
@@ -448,34 +511,34 @@ const RegisterStudent = () => {
               onChange={handleChange}
               required
               className="form-input"
-              style={{ paddingRight: '45px' }}
+              style={{ paddingRight: "45px" }}
             />
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
               style={{
-                position: 'absolute',
-                right: '12px',
-                top: '50%',
-                transform: 'translateY(-50%)',
-                background: 'none',
-                border: 'none',
-                cursor: 'pointer',
-                color: '#9ca3af',
-                padding: '4px',
-                display: 'flex',
-                alignItems: 'center'
+                position: "absolute",
+                right: "12px",
+                top: "50%",
+                transform: "translateY(-50%)",
+                background: "none",
+                border: "none",
+                cursor: "pointer",
+                color: "#9ca3af",
+                padding: "4px",
+                display: "flex",
+                alignItems: "center",
               }}
             >
               {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
             </button>
           </div>
 
-          <button 
-            type="submit" 
-            disabled={isPending} 
+          <button
+            type="submit"
+            disabled={isPending}
             className="auth-button"
-            style={{ width: '100%' }}
+            style={{ width: "100%" }}
           >
             {isPending ? "Registering Student..." : "Register Student"}
             {!isPending && <span className="button-arrow">→</span>}
