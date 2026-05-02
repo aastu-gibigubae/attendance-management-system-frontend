@@ -395,6 +395,8 @@ const RegisterStudent = () => {
                 className="form-input"
               >
                 <option value="">Select Department</option>
+
+                {/* Departments */}
                 <option value="Applied Science">Applied Science</option>
                 <option value="Architecture">Architecture</option>
                 <option value="Biotechnology">Biotechnology</option>
@@ -423,11 +425,16 @@ const RegisterStudent = () => {
                   Mechanical Engineering
                 </option>
                 <option value="Mining">Mining</option>
-                <option value="Other">Other</option>
-                <option value="Postgraduate">Postgraduate</option>
                 <option value="Software Engineering">
                   Software Engineering
                 </option>
+
+                {/* Separator */}
+                <option disabled>──────────</option>
+
+                {/* Special cases */}
+                <option value="Postgraduate">Postgraduate</option>
+                <option value="Other">Other</option>
               </select>
             </div>
 
