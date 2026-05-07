@@ -149,7 +149,6 @@ const CreateAttendanceDialog = ({ isOpen, onClose, onConfirm, isPending }) => {
           <input
             type="number"
             min={1}
-            max={180}
             value={minutes}
             onChange={(e) => setMinutes(e.target.value)}
             style={{
