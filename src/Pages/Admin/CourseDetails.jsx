@@ -99,7 +99,7 @@ const CreateAttendanceDialog = ({ isOpen, onClose, onConfirm, isPending }) => {
   const handleSubmit = (e) => {
     e.preventDefault();
     const val = parseInt(minutes, 10);
-    if (!val || val < 1 || val > 180) return;
+    if (!val || val < 1 ) return;
     onConfirm(val);
   };
 
